@@ -168,6 +168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5041f7d74409630aa068ec10ee3c1ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  snake: {fileID: 1114039771}
 --- !u!1 &514693481
 GameObject:
   m_ObjectHideFlags: 0
@@ -433,7 +434,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9aefe6c99fd4efcb6b4972f029142ea9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridMoveTimerMax: 0.4
+  gridMoveTimerMax: 0.2
 --- !u!1 &1999253417
 GameObject:
   m_ObjectHideFlags: 0
@@ -464,6 +465,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   snakeHeadSprite: {fileID: 21300000, guid: 0330a1faa9279b608bab305e1d0d756a, type: 3}
+  foodSprite: {fileID: 21300000, guid: 591560be829dd784d9d3b62edf799eea, type: 3}
 --- !u!4 &1999253419
 Transform:
   m_ObjectHideFlags: 0

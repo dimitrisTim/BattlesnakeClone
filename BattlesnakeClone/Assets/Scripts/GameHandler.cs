@@ -6,20 +6,14 @@ using CodeMonkey.Utils;
 
 public class GameHandler : MonoBehaviour
 {
+    [SerializeField] private Snake snake;   
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {        
         Debug.Log("Start() called");
-        
-        // GameObject snakeHead = new GameObject();
-        // SpriteRenderer spriteRenderer = snakeHead.AddComponent<SpriteRenderer>();
-        // spriteRenderer.sprite = GameAssets.i.snakeHeadSprite;
-        // spriteRenderer.transform.position = new Vector3(0, 0);        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+                
+        LevelGrid levelGrid = new LevelGrid(5, 5); 
+        snake.Setup(levelGrid);
+        levelGrid.Setup(snake);
     }
 }
