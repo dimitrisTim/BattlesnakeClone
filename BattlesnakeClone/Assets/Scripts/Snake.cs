@@ -8,12 +8,6 @@ public class Snake : MonoBehaviour
     private Vector2Int gridPosition;
     private float gridMoveTimer;
     public float gridMoveTimerMax;
-    private LevelGrid levelGrid;
-
-    public void Setup(LevelGrid lvlGrid)
-    {
-        levelGrid = lvlGrid;
-    }
 
     private void Awake()
     {
@@ -74,8 +68,6 @@ public class Snake : MonoBehaviour
 
             transform.position = new Vector3(gridPosition.x, gridPosition.y);
             transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(gridMoveDirection) - 90);
-
-            levelGrid.SnakeMoved(gridPosition);
         }        
     }
 
@@ -90,5 +82,14 @@ public class Snake : MonoBehaviour
     public Vector2Int GetGridPosition()
     {
         return gridPosition;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Debug.Log("Collision detected");
+        if (collision.CompareTag("Scoring"))
+        {
+            Destroy(collision.gameObject);
+        }
     }
 }
