@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using CodeMonkey.Utils;
 
@@ -10,6 +11,10 @@ public class Snake : MonoBehaviour
     private Rigidbody2D body;
     private List<KeyInputDirection> keysAndDirections;
     [SerializeField] private float moveSpeed = 1f;
+
+    private int score;
+    [SerializeField] Transform txtController;
+    private TextMeshProUGUI scoreTXT;
     private int length = 0;
     private List<Vector2Int> snakeMovePositionList;
     private float gridMoveTimer = 0f;
@@ -25,6 +30,10 @@ public class Snake : MonoBehaviour
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.DownArrow, x = 0, y = -1 });
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.LeftArrow, x = -1, y = 0 });
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.RightArrow, x = 1, y = 0 });
+
+        score = 0;
+        scoreTXT = txtController.Find("Score").GetComponent<TextMeshProUGUI>();
+        scoreTXT.text = "Score: " + score;
         Alive = true;
         gridMoveTimer = 0f;
         gridMoveTimerMax = 0.1f;
@@ -32,7 +41,7 @@ public class Snake : MonoBehaviour
     }
 
     private void Update()
-    {   
+    {       
         if (Alive)
         {
             HandleInput();             
@@ -108,6 +117,8 @@ public class Snake : MonoBehaviour
         Debug.Log("Collision detected");
         if (collision.CompareTag("Scoring"))
         {
+            score++;
+            scoreTXT.text = "Score: " + score;
             grow();
             Destroy(collision.gameObject);
         }
