@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using CodeMonkey.Utils;
 
 public class Snake : MonoBehaviour
 {
@@ -9,20 +10,25 @@ public class Snake : MonoBehaviour
     private Rigidbody2D body;
     private List<KeyInputDirection> keysAndDirections;
     [SerializeField] private float moveSpeed = 1f;
-
+    private int length = 0;
+    private List<Vector2Int> snakeMovePositionList;
+    private float gridMoveTimer = 0f;
+    private float gridMoveTimerMax = 0.1f;
     public bool Alive {get; set;}
 
     private void Awake()
     {
         GridPosition = new Vector2Int(0, 0);
         gridMoveDirection = new Vector2Int(1, 0);
-        body = GetComponent<Rigidbody2D>();
         keysAndDirections = new List<KeyInputDirection>();
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.UpArrow, x = 0, y = 1 });
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.DownArrow, x = 0, y = -1 });
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.LeftArrow, x = -1, y = 0 });
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.RightArrow, x = 1, y = 0 });
         Alive = true;
+        gridMoveTimer = 0f;
+        gridMoveTimerMax = 0.1f;
+        snakeMovePositionList = new List<Vector2Int>();
     }
 
     private void Update()
@@ -49,7 +55,6 @@ public class Snake : MonoBehaviour
         {
             if (Input.GetKeyDown(keyInput.code))
             {
-                SetRoundedPosition();
                 if (gridMoveDirection.x != -keyInput.x && gridMoveDirection.y != -keyInput.y)
                 {
                     gridMoveDirection.x = keyInput.x;
@@ -59,16 +64,30 @@ public class Snake : MonoBehaviour
         }
     }
 
-    private void SetRoundedPosition()
+ private void HandleGridMovement()
     {
-        var roundedPosition = new Vector3(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y));
-        transform.position = roundedPosition;
-    }
+        gridMoveTimer += Time.deltaTime;
+        if (gridMoveTimer >= gridMoveTimerMax)
+        {
+            gridMoveTimer -= gridMoveTimerMax;
+            snakeMovePositionList.Insert(0, GridPosition);
+            //Debug.Log("position:" + gridPosition);            
+            GridPosition += gridMoveDirection;
+            transform.position = new Vector3(GridPosition.x, GridPosition.y);
+            transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(gridMoveDirection) - 90);
+            if (snakeMovePositionList.Count >= length + 1)
+            {
+                snakeMovePositionList.RemoveAt(snakeMovePositionList.Count - 1);
+            }
+            for (int i = 0; i < snakeMovePositionList.Count; i++)
+            {
+                Vector2Int snakeMovePosition = snakeMovePositionList[i];
+                World_Sprite worldSprite = World_Sprite.Create(new Vector3(snakeMovePosition.x, snakeMovePosition.y), Vector3.one * 0.5f, Color.white);
+                Debug.Log("spawned at:" + snakeMovePosition.x + snakeMovePosition.y);
+                FunctionTimer.Create(worldSprite.DestroySelf, gridMoveTimerMax);
+            }
+        }
 
-    private void HandleGridMovement()
-    {                      
-        body.velocity = new Vector2(gridMoveDirection.x, gridMoveDirection.y) * moveSpeed;
-        transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(gridMoveDirection) - 90);  
     }
 
     private float GetAngleFromVectorFloat(Vector2 dir)
@@ -89,7 +108,12 @@ public class Snake : MonoBehaviour
         Debug.Log("Collision detected");
         if (collision.CompareTag("Scoring"))
         {
+            grow();
             Destroy(collision.gameObject);
         }
+    }
+    private void grow()
+    {
+        length++;
     }
 }
