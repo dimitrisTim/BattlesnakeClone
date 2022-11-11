@@ -55,7 +55,6 @@ public class Snake : MonoBehaviour
         {
             if (Input.GetKeyDown(keyInput.code))
             {
-                SetRoundedPosition();
                 if (gridMoveDirection.x != -keyInput.x && gridMoveDirection.y != -keyInput.y)
                 {
                     gridMoveDirection.x = keyInput.x;
@@ -71,10 +70,10 @@ public class Snake : MonoBehaviour
         if (gridMoveTimer >= gridMoveTimerMax)
         {
             gridMoveTimer -= gridMoveTimerMax;
-            snakeMovePositionList.Insert(0, gridPosition);
+            snakeMovePositionList.Insert(0, GridPosition);
             //Debug.Log("position:" + gridPosition);            
-            gridPosition += gridMoveDirection;
-            transform.position = new Vector3(gridPosition.x, gridPosition.y);
+            GridPosition += gridMoveDirection;
+            transform.position = new Vector3(GridPosition.x, GridPosition.y);
             transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(gridMoveDirection) - 90);
             if (snakeMovePositionList.Count >= length + 1)
             {
