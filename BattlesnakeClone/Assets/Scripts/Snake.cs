@@ -5,14 +5,16 @@ using UnityEngine;
 public class Snake : MonoBehaviour
 {
     private Vector2Int gridMoveDirection;
-    private Vector2Int gridPosition;
+    public Vector2Int GridPosition {get; private set;}
     private Rigidbody2D body;
     private List<KeyInputDirection> keysAndDirections;
     [SerializeField] private float moveSpeed = 1f;
 
+    public bool Alive {get; set;}
+
     private void Awake()
     {
-        gridPosition = new Vector2Int(0, 0);
+        GridPosition = new Vector2Int(0, 0);
         gridMoveDirection = new Vector2Int(1, 0);
         body = GetComponent<Rigidbody2D>();
         keysAndDirections = new List<KeyInputDirection>();
@@ -20,12 +22,20 @@ public class Snake : MonoBehaviour
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.DownArrow, x = 0, y = -1 });
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.LeftArrow, x = -1, y = 0 });
         keysAndDirections.Add(new KeyInputDirection { code = KeyCode.RightArrow, x = 1, y = 0 });
+        Alive = true;
     }
 
     private void Update()
     {   
-        HandleInput();             
-        HandleGridMovement();        
+        if (Alive)
+        {
+            HandleInput();             
+            HandleGridMovement();    
+        }
+        else
+        {            
+            Destroy(this.gameObject);
+        }
     }
 
     private void HandleInput()
@@ -71,7 +81,7 @@ public class Snake : MonoBehaviour
 
     public Vector2Int GetGridPosition()
     {
-        return gridPosition;
+        return GridPosition;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
