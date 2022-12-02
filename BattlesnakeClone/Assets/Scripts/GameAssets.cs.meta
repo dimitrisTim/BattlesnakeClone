@@ -3,7 +3,10 @@ guid: 3cfa069aab4b71f06857f0d78db96fef
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - snakeHeadSprite: {instanceID: 0}
+  - foodSprite: {instanceID: 0}
+  - snakeBodySprite: {fileID: 21300000, guid: 35e9635b1387501d29dbec2d8eeda0dc, type: 3}
   executionOrder: -20
   icon: {instanceID: 0}
   userData: 
