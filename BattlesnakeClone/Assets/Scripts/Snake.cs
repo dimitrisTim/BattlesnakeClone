@@ -17,11 +17,9 @@ public class Snake : MonoBehaviour
     private Direction gridMoveDirection;
     public Vector2Int GridPosition {get; private set;}
     private Rigidbody2D body;
-    private List<KeyInputDirection> keysAndDirections;
     [SerializeField] private float moveSpeed = 1f;
 
     private int score;
-    [SerializeField] Transform txtController;
     private TextMeshProUGUI scoreTXT;
     private int snakeBodySize = 0;
     private List<SnakeMovePosition> snakeMovePositionList;
@@ -30,23 +28,19 @@ public class Snake : MonoBehaviour
     private float gridMoveTimerMax = 0.25f;
     public bool Alive {get; set;}
     private bool snakeAte = false;
-
     private int prevLength;
-    
+    private int width, height;    
+    public IKeyStrategy KeyStrategy {get; set;}
+
     private void Awake()
     {
         prevLength = 0;
-        GridPosition = new Vector2Int(0, 0);
-        gridMoveDirection = Direction.Right;
-        keysAndDirections = new List<KeyInputDirection>();
-        keysAndDirections.Add(new KeyInputDirection { code = KeyCode.UpArrow, x = 0, y = 1 });
-        keysAndDirections.Add(new KeyInputDirection { code = KeyCode.DownArrow, x = 0, y = -1 });
-        keysAndDirections.Add(new KeyInputDirection { code = KeyCode.LeftArrow, x = -1, y = 0 });
-        keysAndDirections.Add(new KeyInputDirection { code = KeyCode.RightArrow, x = 1, y = 0 });
+        GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);
+        SetValidRandomDirection();
         snakeBodyPartList = new List<SnakeBodyPart>();
         snakeMovePositionList = new List<SnakeMovePosition>();
         score = 0;
-        scoreTXT = txtController.Find("Score").GetComponent<TextMeshProUGUI>();
+        scoreTXT = GameObject.Find("Score").GetComponent<TextMeshProUGUI>();
         scoreTXT.text = "Score: " + score;
         Alive = true;
         gridMoveTimer = 0f;
@@ -66,30 +60,52 @@ public class Snake : MonoBehaviour
         }
     }
 
+    private void SetValidRandomDirection()
+    {
+        var validPositions = new List<Direction>();
+        if (GridPosition.x > 0)
+        {
+            validPositions.Add(Direction.Left);
+        }
+        if (GridPosition.x < width - 1)
+        {
+            validPositions.Add(Direction.Right);
+        }
+        if (GridPosition.y > 0)
+        {
+            validPositions.Add(Direction.Down);
+        }
+        if (GridPosition.y < height - 1)
+        {
+            validPositions.Add(Direction.Up);
+        }
+        gridMoveDirection = validPositions[Random.Range(0, validPositions.Count)];
+    }
+
     private void HandleInput()
     {   
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (KeyStrategy.CheckUp())
         {
             if (gridMoveDirection != Direction.Down)
             {
                 gridMoveDirection = Direction.Up;
             }
         }
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (KeyStrategy.CheckDown())
         {
             if (gridMoveDirection != Direction.Up)
             {
                 gridMoveDirection = Direction.Down;
             }
         }
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        if (KeyStrategy.CheckLeft())
         {
             if (gridMoveDirection != Direction.Right)
             {
                 gridMoveDirection = Direction.Left;
             }
         }
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        if (KeyStrategy.CheckRight())
         {
             if (gridMoveDirection != Direction.Left)
             {
