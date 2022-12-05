@@ -15,15 +15,20 @@ public class GameHandler : MonoBehaviour
 
     private void Awake()
     {
+        GameAssets.i.Width = width;
+        GameAssets.i.Height = height;
+
         var newSnake = Instantiate(snakePrefab, new Vector3(
-            Random.Range(-width, width), Random.Range(-height, height)), 
+            Random.Range(-width, 0), Random.Range(-height, 0)), 
             Quaternion.identity);
         newSnake.GetComponent<Snake>().KeyStrategy = new ArrowsStrategy();
+        newSnake.GetComponent<Snake>().ID = 1;
 
         var newSnake2 = Instantiate(snakePrefab, new Vector3(
-            Random.Range(-width, width), Random.Range(-height, height)), 
+            Random.Range(0, width), Random.Range(0, height)), 
             Quaternion.identity);
         newSnake2.GetComponent<Snake>().KeyStrategy = new WASDStrategy();
+        newSnake2.GetComponent<Snake>().ID = 2;
     }
 
     // Start is called before the first frame update
