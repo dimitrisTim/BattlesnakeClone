@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using CodeMonkey.Utils;
+using UnityEngine.UI;
 
 public class Snake : MonoBehaviour
 {
@@ -32,7 +33,13 @@ public class Snake : MonoBehaviour
     private int width, height;    
     public IKeyStrategy KeyStrategy {get; set;}
 
-    private void Awake()
+    private Slider slider;
+    private float fillSpeed = 0.5f;
+    private float startingHealth = 1f;
+
+    public int ID {get; set;}
+
+    private void Start()
     {
         prevLength = 0;
         GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);
@@ -40,11 +47,13 @@ public class Snake : MonoBehaviour
         snakeBodyPartList = new List<SnakeBodyPart>();
         snakeMovePositionList = new List<SnakeMovePosition>();
         score = 0;
-        scoreTXT = GameObject.Find("Score").GetComponent<TextMeshProUGUI>();
+        scoreTXT = GameObject.Find("Score" + ID).GetComponent<TextMeshProUGUI>();
         scoreTXT.text = "Score: " + score;
         Alive = true;
         gridMoveTimer = 0f;
-        gridMoveTimerMax = 0.25f;       
+        gridMoveTimerMax = 0.25f;     
+        slider = GameObject.Find("Slider" + ID).GetComponent<Slider>();
+        slider.value = startingHealth;
     }
 
     private void Update()
@@ -60,22 +69,38 @@ public class Snake : MonoBehaviour
         }
     }
 
+    private void UpdateHealthBar()
+    {
+        if (snakeAte)
+        {
+            slider.value = startingHealth;
+        }
+        else
+        {
+            slider.value -= fillSpeed * Time.deltaTime;
+            if (slider.value <= 0)
+            {
+                Alive = false;
+            }
+        }
+    }
+
     private void SetValidRandomDirection()
     {
         var validPositions = new List<Direction>();
-        if (GridPosition.x > 0)
+        if (GridPosition.x > -GameAssets.i.Width)
         {
             validPositions.Add(Direction.Left);
         }
-        if (GridPosition.x < width - 1)
+        if (GridPosition.x < GameAssets.i.Width)
         {
             validPositions.Add(Direction.Right);
         }
-        if (GridPosition.y > 0)
+        if (GridPosition.y > -GameAssets.i.Height)
         {
             validPositions.Add(Direction.Down);
         }
-        if (GridPosition.y < height - 1)
+        if (GridPosition.y < GameAssets.i.Height)
         {
             validPositions.Add(Direction.Up);
         }
@@ -141,14 +166,14 @@ public class Snake : MonoBehaviour
             if (snakeAte)
             {
                 snakeBodySize++;
-                CreateSnakeBodyPart();
-                snakeAte = false;
+                CreateSnakeBodyPart();                
             }
             if (snakeMovePositionList.Count >= snakeBodySize + 1)
             {
                 snakeMovePositionList.RemoveAt(snakeMovePositionList.Count - 1);
             }
-
+            UpdateHealthBar();
+            snakeAte = false;
             UpdateSnakeBodyParts();
 
             foreach (SnakeBodyPart snakeBodyPart in snakeBodyPartList)
