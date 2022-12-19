@@ -259,16 +259,14 @@ public class Snake : MonoBehaviour
         public SnakeBodyPart(int bodyIndex)
         {
             GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
-            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySprite;
+            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteVertical;
             transform = snakeBodyGameObject.transform;
         }
         public void SetSnakeMovePosition(SnakeMovePosition snakeMovePosition)
         {
             this.snakeMovePosition = snakeMovePosition;
-
-            transform.position = new Vector3(snakeMovePosition.GetGridPosition().x, snakeMovePosition.GetGridPosition().y);
-
-            float angle;
+            Destroy(this.transform.gameObject);
+            GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
             switch (snakeMovePosition.GetDirection())
             {
                 default:
@@ -276,14 +274,17 @@ public class Snake : MonoBehaviour
                     switch (snakeMovePosition.GetPreviousDirection())
                     {
                         default:
-                            angle = 0;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteVertical;
+                            this.transform = snakeBodyGameObject.transform;
                             break;
-                        case Direction.Left: // Previously was going Left
-                            angle = 0 + 45;
+                        case Direction.Left: // Previously was going Left           
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerLowerLeft;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(.2f, .2f);
                             break;
-                        case Direction.Right: // Previously was going Right
-                            angle = 0 - 45;
+                        case Direction.Right: // Previously was going Right                           
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerLowerRight;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(-.2f, .2f);
                             break;
                     }
@@ -292,14 +293,17 @@ public class Snake : MonoBehaviour
                     switch (snakeMovePosition.GetPreviousDirection())
                     {
                         default:
-                            angle = 180;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteVertical;
+                            this.transform = snakeBodyGameObject.transform;
                             break;
                         case Direction.Left: // Previously was going Left
-                            angle = 180 - 45;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerUpperLeft;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(.2f, -.2f);
                             break;
                         case Direction.Right: // Previously was going Right
-                            angle = 180 + 45;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerUpperRight;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(-.2f, -.2f);
                             break;
                     }
@@ -308,14 +312,17 @@ public class Snake : MonoBehaviour
                     switch (snakeMovePosition.GetPreviousDirection())
                     {
                         default:
-                            angle = +90;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteHorizontal;
+                            this.transform = snakeBodyGameObject.transform;
                             break;
                         case Direction.Down: // Previously was going Down
-                            angle = 180 - 45;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerLowerRight;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(-.2f, .2f);
                             break;
                         case Direction.Up: // Previously was going Up
-                            angle = 45;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerUpperRight;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(-.2f, -.2f);
                             break;
                     }
@@ -324,21 +331,23 @@ public class Snake : MonoBehaviour
                     switch (snakeMovePosition.GetPreviousDirection())
                     {
                         default:
-                            angle = -90;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteHorizontal;
+                            this.transform = snakeBodyGameObject.transform;
                             break;
                         case Direction.Down: // Previously was going Down
-                            angle = 180 + 45;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerLowerLeft;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(.2f, .2f);
                             break;
                         case Direction.Up: // Previously was going Up
-                            angle = -45;
+                            snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeCornerUpperLeft;
+                            this.transform = snakeBodyGameObject.transform;
                             transform.position += new Vector3(.2f, -.2f);
                             break;
                     }
                     break;
             }
-
-            transform.eulerAngles = new Vector3(0, 0, angle);
+            transform.position = new Vector3(snakeMovePosition.GetGridPosition().x, snakeMovePosition.GetGridPosition().y);
         }
 
         public Vector2Int GetGridPosition()

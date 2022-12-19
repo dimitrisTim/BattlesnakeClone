@@ -12,7 +12,11 @@ public class GameAssets : MonoBehaviour
     }
     public Sprite snakeHeadSprite;
     public Sprite foodSprite;
-    public Sprite snakeBodySprite;
-
+    public Sprite snakeBodySpriteVertical;
+    public Sprite snakeBodySpriteHorizontal;
+    public Sprite snakeCornerUpperLeft;
+    public Sprite snakeCornerUpperRight;
+    public Sprite snakeCornerLowerLeft;
+    public Sprite snakeCornerLowerRight;
     public int Width, Height;
 }
