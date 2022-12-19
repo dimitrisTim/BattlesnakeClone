@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using CodeMonkey.Utils;
 using UnityEngine.UI;
+using System.Linq;
 
 public class Snake : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class Snake : MonoBehaviour
     private List<SnakeMovePosition> snakeMovePositionList;
     private List<SnakeBodyPart> snakeBodyPartList;
     private float gridMoveTimer = 0f;
-    private float gridMoveTimerMax = 0.25f;
+    public float GridMoveTimerMax = 0.25f;
     public bool Alive {get; set;}
     private bool snakeAte = false;
     private int prevLength;
@@ -38,6 +39,7 @@ public class Snake : MonoBehaviour
     private float startingHealth = 1f;
 
     public int ID {get; set;}
+
 
     private void Start()
     {
@@ -51,7 +53,7 @@ public class Snake : MonoBehaviour
         scoreTXT.text = "Score: " + score;
         Alive = true;
         gridMoveTimer = 0f;
-        gridMoveTimerMax = 0.25f;     
+        GridMoveTimerMax = 0.25f;     
         slider = GameObject.Find("Slider" + ID).GetComponent<Slider>();
         slider.value = startingHealth;
     }
@@ -142,9 +144,9 @@ public class Snake : MonoBehaviour
     private void HandleGridMovement()
     { 
         gridMoveTimer += Time.deltaTime;
-        if (gridMoveTimer >= gridMoveTimerMax)
+        if (gridMoveTimer >= GridMoveTimerMax)
         {
-            gridMoveTimer -= gridMoveTimerMax;
+            gridMoveTimer -= GridMoveTimerMax;
             SnakeMovePosition previousSnakeMovePosition = null;
             if (snakeMovePositionList.Count > 0)
             {
@@ -234,6 +236,11 @@ public class Snake : MonoBehaviour
             grow();
             // createSnakeBody();
             Destroy(collision.gameObject);
+        }
+        if (collision.CompareTag("Speed"))
+        {
+            Destroy(collision.gameObject);
+            this.gameObject.AddComponent<SpeedAbility>();
         }
     }
 
