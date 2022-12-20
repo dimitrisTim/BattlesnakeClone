@@ -177,16 +177,6 @@ public class Snake : MonoBehaviour
             UpdateHealthBar();
             snakeAte = false;
             UpdateSnakeBodyParts();
-
-            foreach (SnakeBodyPart snakeBodyPart in snakeBodyPartList)
-            {
-                Vector2Int snakeBodyPartGridPosition = snakeBodyPart.GetGridPosition();
-                if (GridPosition == snakeBodyPartGridPosition)
-                {
-                    // Game Over!                    
-                    Alive = false;
-                }
-            }
             transform.position = new Vector3(GridPosition.x, GridPosition.y);
             transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(gridMoveDirectionVector) - 90);           
         }
@@ -241,6 +231,12 @@ public class Snake : MonoBehaviour
         {
             Destroy(collision.gameObject);
             this.gameObject.AddComponent<SpeedAbility>();
+        }
+        if (collision.CompareTag("Player"))
+        {
+            // Game Over!
+            Debug.Log("Body Collision");
+            Alive = false;
         }
     }
 
@@ -354,6 +350,8 @@ public class Snake : MonoBehaviour
                     }
                     break;
             }
+            snakeBodyGameObject.AddComponent<BoxCollider2D>();
+            snakeBodyGameObject.tag = "Player";
             transform.position = new Vector3(snakeMovePosition.GetGridPosition().x, snakeMovePosition.GetGridPosition().y);
         }
 
