@@ -39,6 +39,7 @@ public class Snake : MonoBehaviour
     private float startingHealth = 1f;
 
     public int ID {get; set;}
+    public GameObject brickPrefab;
 
 
     private void Start()
@@ -139,6 +140,57 @@ public class Snake : MonoBehaviour
                 gridMoveDirection = Direction.Right;
             }
         }
+        if (KeyStrategy.CheckAbilityKey())
+        {   
+            var brickPosition = GetNewGridPosition(3);
+            var brickPosition3d = new Vector3(brickPosition.x, brickPosition.y, 1);            
+            var newBrick = Instantiate(brickPrefab, transform.position, Quaternion.identity);                     
+            newBrick.transform.Rotate(0, 10, 0);
+            StartCoroutine(AnimateMovement(newBrick, brickPosition3d));   
+        }
+    }
+
+    IEnumerator AnimateMovement(GameObject obj, Vector3 target)
+    {
+        // Calculate the distance to the target position
+        float distance = Vector3.Distance(obj.transform.position, target);
+
+        // Calculate the duration of the animation based on the distance and speed
+        float duration = distance / 2f;
+
+        // Set the starting time
+        float startTime = Time.time;
+
+        // Loop until the elapsed time is greater than the duration
+        while (Time.time - startTime < duration)
+        {
+            // Lerp the object's position towards the target position
+            var t = (Time.time - startTime) / duration;
+            obj.transform.position = Vector3.Slerp(obj.transform.position, target, t);
+
+            // Wait for the next frame
+            yield return null;
+        }
+
+        // Set the object's position to the target position
+        obj.transform.position = target;
+    }
+
+    private Vector2Int GetNewGridPosition(int distance = 1)
+    {        
+        return GridPosition + GetGridMoveDirectionVector() * distance;
+    }
+
+    private Vector2Int GetGridMoveDirectionVector()
+    {
+        switch (gridMoveDirection)
+        {
+            default:
+            case Direction.Right: return new Vector2Int(+1, 0);
+            case Direction.Left: return new Vector2Int(-1, 0);
+            case Direction.Up: return new Vector2Int(0, 1);
+            case Direction.Down: return new Vector2Int(0, -1);
+        }
     }
 
     private void HandleGridMovement()
@@ -154,16 +206,8 @@ public class Snake : MonoBehaviour
             }
             SnakeMovePosition snakeMovePosition = new SnakeMovePosition(previousSnakeMovePosition, GridPosition, gridMoveDirection);
             snakeMovePositionList.Insert(0, snakeMovePosition);
-            Vector2Int gridMoveDirectionVector;
-            switch (gridMoveDirection)
-            {
-                default:
-                case Direction.Right: gridMoveDirectionVector = new Vector2Int(+1, 0); break;
-                case Direction.Left: gridMoveDirectionVector = new Vector2Int(-1, 0); break;
-                case Direction.Up: gridMoveDirectionVector = new Vector2Int(0, 1); break;
-                case Direction.Down: gridMoveDirectionVector = new Vector2Int(0, -1); break;
-            }
-            GridPosition += gridMoveDirectionVector;
+
+            GridPosition = GetNewGridPosition();
 
             if (snakeAte)
             {
@@ -188,7 +232,7 @@ public class Snake : MonoBehaviour
                 }
             }
             transform.position = new Vector3(GridPosition.x, GridPosition.y);
-            transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(gridMoveDirectionVector) - 90);           
+            transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);           
         }
 
     }
