@@ -39,7 +39,8 @@ public class Snake : MonoBehaviour
     private float startingHealth = 1f;
 
     public int ID {get; set;}
-    public GameObject brickPrefab;
+    public GameObject wallPrefab;
+    public bool CheckAbility {get; set;}
 
 
     private void Start()
@@ -139,49 +140,15 @@ public class Snake : MonoBehaviour
             {
                 gridMoveDirection = Direction.Right;
             }
-        }
-        if (KeyStrategy.CheckAbilityKey())
-        {   
-            var brickPosition = GetNewGridPosition(3);
-            var brickPosition3d = new Vector3(brickPosition.x, brickPosition.y, 0);            
-            var newBrick = Instantiate(brickPrefab, transform.position, Quaternion.identity);                     
-            //newBrick.transform.Rotate(0, 10, 0);
-            StartCoroutine(AnimateMovement(newBrick, brickPosition3d));   
-        }
-    }
+        }           
+    }    
 
-    IEnumerator AnimateMovement(GameObject obj, Vector3 target)
-    {
-        // Calculate the distance to the target position
-        float distance = Vector3.Distance(obj.transform.position, target);
-
-        // Calculate the duration of the animation based on the distance and speed
-        float duration = distance / 0.1f;
-
-        // Set the starting time
-        float startTime = Time.time;
-
-        // Loop until the elapsed time is greater than the duration
-        while (Time.time - startTime < duration)
-        {
-            // Lerp the object's position towards the target position
-            var t = (Time.time - startTime) / duration;
-            obj.transform.position = Vector3.Slerp(obj.transform.position, target, t);
-
-            // Wait for the next frame
-            yield return null;
-        }
-
-        // Set the object's position to the target position
-        obj.transform.position = target;
-    }
-
-    private Vector2Int GetNewGridPosition(int distance = 1)
+    public Vector2Int GetNewGridPosition(int distance = 1)
     {        
         return GridPosition + GetGridMoveDirectionVector() * distance;
     }
 
-    private Vector2Int GetGridMoveDirectionVector()
+    public Vector2Int GetGridMoveDirectionVector()
     {
         switch (gridMoveDirection)
         {
@@ -285,6 +252,12 @@ public class Snake : MonoBehaviour
         {
             Destroy(collision.gameObject);
             this.gameObject.AddComponent<SpeedAbility>();
+        }
+        if (collision.CompareTag("Wall"))
+        {
+            Debug.Log("Wall trigger detected");
+            Destroy(collision.gameObject);
+            this.gameObject.AddComponent<WallAbility>();
         }
     }
 

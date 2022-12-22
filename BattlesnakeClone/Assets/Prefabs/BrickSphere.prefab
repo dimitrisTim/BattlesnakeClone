@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 9160616558484600410}
   - component: {fileID: 2531298082581736296}
   - component: {fileID: 3413434436609944799}
-  - component: {fileID: 6227688679700996693}
+  - component: {fileID: -3797502346685002117}
   m_Layer: 0
   m_Name: BrickSphere
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -85,19 +85,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &6227688679700996693
-SphereCollider:
+--- !u!58 &-3797502346685002117
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5449232584884774666}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
   m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &4318268355933138657
 PrefabInstance:
   m_ObjectHideFlags: 0
