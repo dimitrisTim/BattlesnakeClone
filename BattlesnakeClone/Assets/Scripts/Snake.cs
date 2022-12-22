@@ -143,9 +143,9 @@ public class Snake : MonoBehaviour
         if (KeyStrategy.CheckAbilityKey())
         {   
             var brickPosition = GetNewGridPosition(3);
-            var brickPosition3d = new Vector3(brickPosition.x, brickPosition.y, 1);            
+            var brickPosition3d = new Vector3(brickPosition.x, brickPosition.y, 0);            
             var newBrick = Instantiate(brickPrefab, transform.position, Quaternion.identity);                     
-            newBrick.transform.Rotate(0, 10, 0);
+            //newBrick.transform.Rotate(0, 10, 0);
             StartCoroutine(AnimateMovement(newBrick, brickPosition3d));   
         }
     }
@@ -156,7 +156,7 @@ public class Snake : MonoBehaviour
         float distance = Vector3.Distance(obj.transform.position, target);
 
         // Calculate the duration of the animation based on the distance and speed
-        float duration = distance / 2f;
+        float duration = distance / 0.1f;
 
         // Set the starting time
         float startTime = Time.time;
