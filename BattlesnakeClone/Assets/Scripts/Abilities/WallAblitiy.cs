@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -7,12 +8,12 @@ public class WallAbility : AbstractAbility
     private Snake snake;
     private float previousSpeed;
     private bool used = false;
+    private GameObject lastWall;
 
     private void Awake()
     {
         this.snake = GetComponent<Snake>();
-        this.Cooldown = 10;
-        this.Activate();
+        this.Cooldown = 10;        
     }
 
     private void Update()
@@ -22,14 +23,36 @@ public class WallAbility : AbstractAbility
             var endPosition = this.snake.GetNewGridPosition(3);
             var direction = this.snake.GetGridMoveDirectionVector();
             var brickPosition3d = new Vector3(endPosition.x, endPosition.y, 0);            
-            var newBrick = Instantiate(this.snake.wallPrefab, this.snake.transform.position, Quaternion.identity);
+            lastWall = Instantiate(this.snake.wallPrefab, this.snake.transform.position, Quaternion.identity);       
             if (direction.y == 0)
             {
-                newBrick.transform.Rotate(0, 0, 90);
-            }             
-            StartCoroutine(AnimateMovement(newBrick, brickPosition3d));
+                lastWall.transform.Rotate(0, 0, 90);
+            }
+            StartCoroutine(AnimateMovement(lastWall, brickPosition3d));
             used = true;
+            this.Activate();
         }           
+    }
+
+    private void DeleteBricskOutsideGrid(GameObject wall)
+    {
+        foreach (var brick in wall.GetComponentsInChildren<Transform>())
+        {
+            if (IsPositionOutsideGrid(brick.position))
+            {
+                Destroy(brick.gameObject);
+            }
+        }
+    }
+
+    private bool IsPositionOutsideGrid(Vector3 position)
+    {
+        var x = Math.Round(position.x);
+        var y = Math.Round(position.y);
+        return x > GameAssets.i.Width || 
+                x < -GameAssets.i.Width || 
+                y > GameAssets.i.Height || 
+                y < -GameAssets.i.Height;
     }
 
     private IEnumerator AnimateMovement(GameObject obj, Vector3 target)
@@ -46,16 +69,23 @@ public class WallAbility : AbstractAbility
         // Loop until the elapsed time is greater than the duration
         while (Time.time - startTime < duration)
         {
-            // Lerp the object's position towards the target position
-            var t = (Time.time - startTime) / duration;
-            obj.transform.position = Vector3.Slerp(obj.transform.position, target, t);
-
+            if (obj != null) 
+            {
+                var t = (Time.time - startTime) / duration;
+                // Lerp the object's position towards the target position
+                obj.transform.position = Vector3.Slerp(obj.transform.position, target, t);
+                DeleteBricskOutsideGrid(obj);
+            }
+            else
+            {
+                break;
+            }       
             // Wait for the next frame
             yield return null;
         }
 
         // Set the object's position to the target position
-        obj.transform.position = target;
+        if (obj != null) obj.transform.position = target;        
     }
     
     protected override void Activate()
@@ -65,6 +95,7 @@ public class WallAbility : AbstractAbility
 
     protected override void Deactivate()
     {
+        Destroy(lastWall);
         Destroy(this);
     }
 }

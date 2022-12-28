@@ -31,7 +31,6 @@ public class Snake : MonoBehaviour
     public bool Alive {get; set;}
     private bool snakeAte = false;
     private int prevLength;
-    private int width, height;    
     public IKeyStrategy KeyStrategy {get; set;}
 
     private Slider slider;
@@ -257,7 +256,11 @@ public class Snake : MonoBehaviour
         {
             Debug.Log("Wall trigger detected");
             Destroy(collision.gameObject);
-            this.gameObject.AddComponent<WallAbility>();
+            // If ability not already active, add it
+            if (this.gameObject.TryGetComponent<WallAbility>(out WallAbility wallAbility) == false)
+            {
+                this.gameObject.AddComponent<WallAbility>();
+            }
         }
     }
 
