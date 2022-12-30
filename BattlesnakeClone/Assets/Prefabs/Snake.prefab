@@ -100,6 +100,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 8
+  GridMoveTimerMax: 0.25
+  wallPrefab: {fileID: 2979221402199616379, guid: 6e494b59aa3ed94ef88427aa130973f8, type: 3}
 --- !u!61 &5353660732003879043
 BoxCollider2D:
   m_ObjectHideFlags: 0

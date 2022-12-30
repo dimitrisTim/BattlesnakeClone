@@ -8,6 +8,7 @@ public interface IKeyStrategy
     bool CheckDown();
     bool CheckLeft();
     bool CheckRight();    
+    bool CheckAbilityKey();
 }
 
 public class ArrowsStrategy : IKeyStrategy
@@ -31,6 +32,11 @@ public class ArrowsStrategy : IKeyStrategy
     {
         return Input.GetKeyDown(KeyCode.RightArrow);
     }
+
+    public bool CheckAbilityKey()
+    {
+        return Input.GetKeyDown(KeyCode.RightShift);
+    }
 }
 
 public class WASDStrategy : IKeyStrategy
@@ -53,5 +59,10 @@ public class WASDStrategy : IKeyStrategy
     public bool CheckRight()
     {
         return Input.GetKeyDown(KeyCode.D);
+    }
+
+    public bool CheckAbilityKey()
+    {
+        return Input.GetKeyDown(KeyCode.Space);
     }
 }

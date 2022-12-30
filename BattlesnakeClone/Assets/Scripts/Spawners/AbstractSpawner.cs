@@ -10,9 +10,22 @@ public abstract class AbstractSpawner : MonoBehaviour
     protected GameObject lastSpawnObject = null;
     protected long lastSpawnTime = 0;
 
+    protected float spawnMin = 10f ;
+    protected float spawnMax = 30f;
+    protected bool checkDelete = true;
+
+    protected virtual void Awake()
+    {
+        this.SpawnRate = UnityEngine.Random.Range(spawnMin, spawnMax);
+    }
+
     protected virtual void Start()
     {
         InvokeRepeating(nameof(Spawn), SpawnRate, SpawnRate);
+        if (checkDelete)
+        {
+            InvokeRepeating(nameof(CheckDeletingFood), SpawnRate, 1.0f);
+        }            
     }
 
     protected void OnDisable()
@@ -36,6 +49,23 @@ public abstract class AbstractSpawner : MonoBehaviour
                 break;
             } 
         }        
+    }
+
+    private void CheckDeletingFood()
+    {
+        if (lastSpawnObject != null)
+        {
+            var time = System.DateTime.Now.Ticks;
+            System.TimeSpan elapsedSpan = new System.TimeSpan(time - lastSpawnTime);
+            if (elapsedSpan.TotalSeconds > 10)
+            {
+                Destroy(lastSpawnObject);
+                // Cooldown spawning and restart later
+                this.CancelInvoke(nameof(Spawn));
+                this.Awake();
+                this.Start();
+            }
+        }
     }
 
     protected virtual bool SpawnCondition()

@@ -27,11 +27,10 @@ public class Snake : MonoBehaviour
     private List<SnakeMovePosition> snakeMovePositionList;
     private List<SnakeBodyPart> snakeBodyPartList;
     private float gridMoveTimer = 0f;
-    public float GridMoveTimerMax = 0.25f;
+    public float GridMoveTimerMax = 0.99f;
     public bool Alive {get; set;}
     private bool snakeAte = false;
     private int prevLength;
-    private int width, height;    
     public IKeyStrategy KeyStrategy {get; set;}
 
     private Slider slider;
@@ -39,6 +38,8 @@ public class Snake : MonoBehaviour
     private float startingHealth = 1f;
 
     public int ID {get; set;}
+    public GameObject wallPrefab;
+    public bool CheckAbility {get; set;}
 
 
     private void Start()
@@ -138,6 +139,23 @@ public class Snake : MonoBehaviour
             {
                 gridMoveDirection = Direction.Right;
             }
+        }           
+    }    
+
+    public Vector2Int GetNewGridPosition(int distance = 1)
+    {        
+        return GridPosition + GetGridMoveDirectionVector() * distance;
+    }
+
+    public Vector2Int GetGridMoveDirectionVector()
+    {
+        switch (gridMoveDirection)
+        {
+            default:
+            case Direction.Right: return new Vector2Int(+1, 0);
+            case Direction.Left: return new Vector2Int(-1, 0);
+            case Direction.Up: return new Vector2Int(0, 1);
+            case Direction.Down: return new Vector2Int(0, -1);
         }
     }
 
@@ -154,16 +172,8 @@ public class Snake : MonoBehaviour
             }
             SnakeMovePosition snakeMovePosition = new SnakeMovePosition(previousSnakeMovePosition, GridPosition, gridMoveDirection);
             snakeMovePositionList.Insert(0, snakeMovePosition);
-            Vector2Int gridMoveDirectionVector;
-            switch (gridMoveDirection)
-            {
-                default:
-                case Direction.Right: gridMoveDirectionVector = new Vector2Int(+1, 0); break;
-                case Direction.Left: gridMoveDirectionVector = new Vector2Int(-1, 0); break;
-                case Direction.Up: gridMoveDirectionVector = new Vector2Int(0, 1); break;
-                case Direction.Down: gridMoveDirectionVector = new Vector2Int(0, -1); break;
-            }
-            GridPosition += gridMoveDirectionVector;
+
+            GridPosition = GetNewGridPosition();
 
             if (snakeAte)
             {
@@ -178,7 +188,7 @@ public class Snake : MonoBehaviour
             snakeAte = false;
             UpdateSnakeBodyParts();
             transform.position = new Vector3(GridPosition.x, GridPosition.y);
-            transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(gridMoveDirectionVector) - 90);           
+            transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);           
         }
 
     }
@@ -232,10 +242,36 @@ public class Snake : MonoBehaviour
             Destroy(collision.gameObject);
             this.gameObject.AddComponent<SpeedAbility>();
         }
+        if (collision.CompareTag("BrickSphere"))
+        {
+            Debug.Log("BrickSphere detected");
+            Destroy(collision.gameObject);
+            // If ability not already active, add it
+            if (this.gameObject.TryGetComponent<WallAbility>(out WallAbility wallAbility) == false)
+            {
+                this.gameObject.AddComponent<WallAbility>();
+            }
+        }
         if (collision.CompareTag("Player"))
         {
             // Game Over!
             Debug.Log("Body Collision");
+            Alive = false;
+        }
+        if (collision.CompareTag("Wall"))
+        {
+            // Game Over!
+            Debug.Log("Wall Collision");
+            Alive = false;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Wall"))
+        {
+            // Game Over!
+            Debug.Log("Wall Collision");
             Alive = false;
         }
     }
