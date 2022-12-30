@@ -8,6 +8,7 @@ TagManager:
   - Scoring
   - Speed
   - Wall
+  - BrickSphere
   layers:
   - Default
   - TransparentFX

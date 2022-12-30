@@ -7,8 +7,8 @@ public class WallSpawner : AbstractSpawner
 {
     protected override void Awake()
     {
-        this.spawnMin = 1f;
-        this.spawnMax = 1f;
+        this.spawnMin = 30f;
+        this.spawnMax = 60f;
         base.Awake();
     }
 

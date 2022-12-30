@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 
 public class WallAbility : AbstractAbility
@@ -22,23 +23,26 @@ public class WallAbility : AbstractAbility
         {   
             var endPosition = this.snake.GetNewGridPosition(3);
             var direction = this.snake.GetGridMoveDirectionVector();
-            var brickPosition3d = new Vector3(endPosition.x, endPosition.y, 0);            
-            lastWall = Instantiate(this.snake.wallPrefab, this.snake.transform.position, Quaternion.identity);       
+            var middleBrickPosition3d = new Vector3(endPosition.x, endPosition.y, -0.5f);            
+            lastWall = Instantiate(this.snake.wallPrefab, 
+                        new Vector3(this.snake.transform.position.x, this.snake.transform.position.y, -2f), 
+                        Quaternion.identity);
+            SetWallColliders(lastWall, false);
             if (direction.y == 0)
             {
                 lastWall.transform.Rotate(0, 0, 90);
             }
-            StartCoroutine(AnimateMovement(lastWall, brickPosition3d));
+            StartCoroutine(AnimateMovement(lastWall, middleBrickPosition3d));
             used = true;
             this.Activate();
         }           
     }
 
-    private void DeleteBricskOutsideGrid(GameObject wall)
+    private void DeleteInvalidBricks(GameObject wall)
     {
-        foreach (var brick in wall.GetComponentsInChildren<Transform>())
+        foreach (var brick in wall.GetComponentsInChildren<Transform>().Skip(1))
         {
-            if (IsPositionOutsideGrid(brick.position))
+            if (IsPositionOutsideGrid(brick.position) || IsPositionOccupied(brick.position))
             {
                 Destroy(brick.gameObject);
             }
@@ -53,6 +57,21 @@ public class WallAbility : AbstractAbility
                 x < -GameAssets.i.Width || 
                 y > GameAssets.i.Height || 
                 y < -GameAssets.i.Height;
+    }
+
+    private bool IsPositionOccupied(Vector3 position)
+    {
+        var occupied = Physics2D.OverlapBox(position, new Vector2(0.1f, 0.1f), 0);
+        return occupied != null && 
+                occupied.gameObject.CompareTag("Player") && 
+                position.z <= -0.48f && 
+                position.z >= -0.52f;
+    }
+
+    private void SetWallColliders(GameObject wall, bool enabled)
+    {
+        wall.GetComponentsInChildren<Collider2D>().ToList().
+                    ForEach(x => x.enabled = enabled);
     }
 
     private IEnumerator AnimateMovement(GameObject obj, Vector3 target)
@@ -70,22 +89,28 @@ public class WallAbility : AbstractAbility
         while (Time.time - startTime < duration)
         {
             if (obj != null) 
-            {
+            {        
+                if (obj.transform.position == target) 
+                {
+                    // When wall reaches lands in end-position, enable colliders
+                    SetWallColliders(lastWall, true);
+                    break;
+                }
                 var t = (Time.time - startTime) / duration;
                 // Lerp the object's position towards the target position
                 obj.transform.position = Vector3.Slerp(obj.transform.position, target, t);
-                DeleteBricskOutsideGrid(obj);
+                DeleteInvalidBricks(obj);
             }
             else
-            {
+            {                
                 break;
             }       
             // Wait for the next frame
             yield return null;
         }
-
-        // Set the object's position to the target position
-        if (obj != null) obj.transform.position = target;        
+        // If all bricks deleted/invalid, deactivate ability
+        if (obj.transform.childCount == 0)            
+            Deactivate();   
     }
     
     protected override void Activate()
