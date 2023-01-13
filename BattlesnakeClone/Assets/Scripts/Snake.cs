@@ -41,22 +41,31 @@ public class Snake : MonoBehaviour
     public GameObject wallPrefab;
     public bool CheckAbility {get; set;}
 
+    public Color MyColor {get; private set;}
+
+    private void Awake()
+    {
+        MyColor = new Color(Random.value, Random.value, Random.value, 1.0f);
+        this.GetComponent<SpriteRenderer>().color = MyColor;
+        
+        SetValidRandomDirection();
+        transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
+    }
 
     private void Start()
     {
         prevLength = 0;
-        GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);
-        SetValidRandomDirection();
+        GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);        
         snakeBodyPartList = new List<SnakeBodyPart>();
         snakeMovePositionList = new List<SnakeMovePosition>();
         score = 0;
         scoreTXT = GameObject.Find("Score" + ID).GetComponent<TextMeshProUGUI>();
-        scoreTXT.text = "Score: " + score;
+        scoreTXT.text = "Score: " + score;     
         Alive = true;
         gridMoveTimer = 0f;
         GridMoveTimerMax = 0.25f;     
         slider = GameObject.Find("Slider" + ID).GetComponent<Slider>();
-        slider.value = startingHealth;
+        slider.value = startingHealth;        
     }
 
     private void Update()
@@ -195,7 +204,7 @@ public class Snake : MonoBehaviour
 
     private void CreateSnakeBodyPart()
     {
-        snakeBodyPartList.Add(new SnakeBodyPart(snakeBodyPartList.Count));
+        snakeBodyPartList.Add(new SnakeBodyPart(snakeBodyPartList.Count, this.MyColor));
     }
 
     private void UpdateSnakeBodyParts()
@@ -220,7 +229,7 @@ public class Snake : MonoBehaviour
     }
    private void createSnakeBody()
     {
-        snakeBodyPartList.Add(new SnakeBodyPart(snakeBodyPartList.Count));
+        snakeBodyPartList.Add(new SnakeBodyPart(snakeBodyPartList.Count, this.MyColor));
         //GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));        
         //snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySprite;
         //snakeBodyGameObject.GetComponent<SpriteRenderer>().sortingOrder = -snakeBodyTransformList.Count;
@@ -295,17 +304,21 @@ public class Snake : MonoBehaviour
     {
         private SnakeMovePosition snakeMovePosition;
         private Transform transform;
-        public SnakeBodyPart(int bodyIndex)
+        private Color myColor;
+        public SnakeBodyPart(int bodyIndex, Color color)
         {
+            myColor = color;
             GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
             snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteVertical;
-            transform = snakeBodyGameObject.transform;
+            transform = snakeBodyGameObject.transform;            
+            snakeBodyGameObject.GetComponent<SpriteRenderer>().color = color;
         }
         public void SetSnakeMovePosition(SnakeMovePosition snakeMovePosition)
         {
             this.snakeMovePosition = snakeMovePosition;
             Destroy(this.transform.gameObject);
             GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
+            snakeBodyGameObject.GetComponent<SpriteRenderer>().color = myColor;
             switch (snakeMovePosition.GetDirection())
             {
                 default:

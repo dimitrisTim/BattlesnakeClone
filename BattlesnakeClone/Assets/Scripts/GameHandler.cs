@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,37 +13,84 @@ public class GameHandler : MonoBehaviour
     private float deathOffset = 0.2f;
     private bool isPaused;
     public GameObject pauseMenu;
+    private TextMeshProUGUI timerObj;
+
+    private List<GameObject> snakes;
 
     private void Awake()
     {
         GameAssets.i.Width = width;
         GameAssets.i.Height = height;
 
+        snakes = new List<GameObject>();
         var newSnake = Instantiate(snakePrefab, new Vector3(
             Random.Range(-width, 0), Random.Range(-height, 0)), 
             Quaternion.identity);
-        newSnake.GetComponent<Snake>().KeyStrategy = new ArrowsStrategy();
+        newSnake.GetComponent<Snake>().KeyStrategy = new WASDStrategy();
         newSnake.GetComponent<Snake>().ID = 1;
+        snakes.Add(newSnake);
 
         var newSnake2 = Instantiate(snakePrefab, new Vector3(
             Random.Range(0, width), Random.Range(0, height)), 
             Quaternion.identity);
-        newSnake2.GetComponent<Snake>().KeyStrategy = new WASDStrategy();
+        newSnake2.GetComponent<Snake>().KeyStrategy = new ArrowsStrategy();
         newSnake2.GetComponent<Snake>().ID = 2;
+        snakes.Add(newSnake2);
+
+        timerObj = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
+        SetPlayerNameColors();
+    }
+
+    private void SetPlayerNameColors()
+    {
+        foreach (var snake in snakes)
+        {
+            var playerName = GameObject.Find("Player" + snake.GetComponent<Snake>().ID + "Name").GetComponent<TextMeshProUGUI>();
+            playerName.color = snake.GetComponent<Snake>().MyColor;
+        }
     }
 
     // Start is called before the first frame update
     private void Start()
-    {        
-        pauseMenu.SetActive(false);
+    {   
+        SetSnakeScripts(false);
+        pauseMenu.SetActive(false);        
         isPaused = false;
+        CountDown();        
+    }
+
+    private void CountDown()
+    {
+        StartCoroutine(CountDownCoroutine());
+    }
+
+    private IEnumerator CountDownCoroutine()
+    {        
+        var textToShow = new List<string> {"3", "2", "1", "GO!"};    
+        foreach (var text in textToShow)
+        {
+            timerObj.text = text;
+            yield return new WaitForSeconds(1f);
+        }
+        timerObj.text = "";
+        SetSnakeScripts(true);
+    }
+
+    /// <summary>
+    /// Can prevent snakes from moving before the game starts
+    /// </summary>
+    private void SetSnakeScripts(bool enabled)
+    {
+        foreach (var snake in snakes)
+        {
+            snake.GetComponent<Snake>().enabled = enabled;
+        }
     }
 
     private void Update()
     {
         if (Input.GetKeyUp(KeyCode.Escape))
             ShowPauseMenu();
-        CheckSnakePosition();
     }
 
     public void ShowPauseMenu()
@@ -58,7 +106,7 @@ public class GameHandler : MonoBehaviour
 
     public void ShowStartScreen()
     {
-        Time.timeScale = 1f;
+        //Time.timeScale = 1f;
         SceneManager.LoadScene(0);
     }
 
@@ -69,24 +117,8 @@ public class GameHandler : MonoBehaviour
 
     public void ReloadGame()
     {
-        Time.timeScale = 1f;
+        //Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-    
-
-    private void CheckSnakePosition()
-    {
-        // var snakeCurrPosition = snake.transform.position;
-        // if (snake.GetComponent<Snake>().Alive)
-        // {
-        //     if (snakeCurrPosition.x < -width - deathOffset   || 
-        //         snakeCurrPosition.x > width  + deathOffset   || 
-        //         snakeCurrPosition.y < -height - deathOffset  || 
-        //         snakeCurrPosition.y > height + deathOffset)
-        //     {
-        //         StopEverything();
-        //     }
-        // }
     }
 
     private void StopEverything()
