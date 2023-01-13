@@ -300,7 +300,6 @@ MonoBehaviour:
   width: 5
   height: 5
   pauseMenu: {fileID: 228739780}
-  timerText: {fileID: 2085029762}
 --- !u!1 &224417629
 GameObject:
   m_ObjectHideFlags: 0
