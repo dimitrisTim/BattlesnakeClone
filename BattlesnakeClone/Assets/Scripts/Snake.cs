@@ -6,7 +6,7 @@ using CodeMonkey.Utils;
 using UnityEngine.UI;
 using System.Linq;
 
-public class Snake : MonoBehaviour
+public class Snake : MonoBehaviour, System.ICloneable
 {
     public enum Direction
     {
@@ -34,7 +34,7 @@ public class Snake : MonoBehaviour
     public IKeyStrategy KeyStrategy {get; set;}
 
     private Slider slider;
-    public int Health {get {return (int)(slider.value * 100);}}
+    public int Health {get {return (int)(slider.value * 100);} set{slider.value = value;}}
     private float fillSpeed = 0.5f;
     private float startingHealth = 1f;
 
@@ -393,6 +393,21 @@ public class Snake : MonoBehaviour
         //CreateSnakeBodyPart();
         snakeAte = true;        
     }
+
+    public object Clone()
+    {
+        return new Snake()
+        {
+            GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y),
+            gridMoveDirection = this.gridMoveDirection,
+            snakeMovePositionList = this.snakeMovePositionList.Select(x => (SnakeMovePosition)x.Clone()).ToList(),
+            snakeBodyPartList = this.snakeBodyPartList.Select(x => (SnakeBodyPart)x.Clone()).ToList(),
+            Alive = this.Alive,
+            score = this.score,
+            Health = this.Health,
+        };        
+    }
+
     public class SnakeBodyPart
     {
         private SnakeMovePosition snakeMovePosition;

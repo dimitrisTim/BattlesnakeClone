@@ -15,6 +15,7 @@ public class AlphaBeta
     private List<GameObject> spawnedGoodies;
     private int[,] boardState;
     private bool timeExpired;
+    private Dictionary<int, Dictionary<Snake.Direction, float>> maxMovesSorted;
     
     /// <summary>
     /// First input the AI snake, second the enemy.    
@@ -27,6 +28,7 @@ public class AlphaBeta
         this.spawnedGoodies = new List<GameObject>();
         this.boardState = new int[GameAssets.i.Width, GameAssets.i.Height];        
         this.timeExpired = false;
+        this.maxMovesSorted = new Dictionary<int, Dictionary<Snake.Direction, float>>();
 
         spawnedGoodies.AddRange(GameObject.FindGameObjectsWithTag("BrickSphere"));
         spawnedGoodies.AddRange(GameObject.FindGameObjectsWithTag("Scoring"));
@@ -39,8 +41,8 @@ public class AlphaBeta
         {
             foreach (var bodyPart in snake.snakeBodyPartList)
             {
-                boardState[((int)bodyPart.Transform.position.x), 
-                            (int)bodyPart.Transform.position.y] = snake.ID;
+                boardState[((int)bodyPart.TransformPosition.x), 
+                            (int)bodyPart.TransformPosition.y] = snake.ID;
             }
         }
         foreach (var spawnedGoodie in spawnedGoodies)
@@ -84,6 +86,60 @@ public class AlphaBeta
         }
         return null;
     }
+
+    private Tuple<float, Snake.Direction> MaxAlphaBeta(float alpha, float beta, int depth, int maxDepth, Board board)
+    {
+        float maxv = -2;
+        Snake.Direction move = Snake.Direction.Right;
+        depth += 1;
+        var result = IsGameOver(depth, maxDepth, "max");
+        if (depth > this.maxDepth) this.maxDepth = depth;
+        if (result != null)
+        {
+            return new Tuple<float, Snake.Direction>((float)result, Snake.Direction.Right);
+        }
+        List<Snake.Direction> possibleActions = null;
+        if (maxMovesSorted.ContainsKey(depth))
+        {
+            possibleActions = maxMovesSorted[depth].Keys.ToList();
+        }
+        else
+        {
+            possibleActions = youSnake.GetPossibleActions(board);
+        }
+        var startingBoard = board.Clone();
+        var sortedMoves = new Dictionary<Snake.Direction, float>();
+        foreach (var action in possibleActions)
+        {
+            youSnake = board.GetAliveOrDeadSnakeById(youSnake.ID);
+            enemySnake = board.GetAliveOrDeadSnakeById(enemySnake.ID);
+            var nextMove = new Tuple<int, Snake.Direction>(youSnake.ID, action);
+            board.CreateNextBoardState(nextMove, true);
+            boardState = board;
+            youSnake = board.GetAliveOrDeadSnakeById(youSnake.ID);
+            enemySnake = board.GetAliveOrDeadSnakeById(enemySnake.ID);
+            var minAlphaBeta = MinAlphaBeta(alpha, beta, depth, maxDepth, board);
+            sortedMoves[action] = minAlphaBeta.Item1;
+            if (minAlphaBeta.Item1 > maxv)
+            {
+                maxv = minAlphaBeta.Item1;
+                move = action;
+            }
+            board = startingBoard;
+            if (maxv >= beta)
+            {
+                maxMovesSorted[depth] = sortedMoves.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+                return new Tuple<float, Snake.Direction>(maxv, move);
+            }
+            if (maxv > alpha)
+            {
+                alpha = maxv;
+            }
+        }
+        maxMovesSorted[depth] = sortedMoves.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+        return new Tuple<float, Snake.Direction>(maxv, move);
+    }
+
 
     private float Evaluate(Snake you, Snake enemy)
     {
