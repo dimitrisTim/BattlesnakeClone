@@ -17,13 +17,13 @@ public class Snake : MonoBehaviour
     }
 
     private Direction gridMoveDirection;
-    public Vector2Int GridPosition {get; private set;}
+    public Vector2Int GridPosition {get; set;}
     private Rigidbody2D body;
     [SerializeField] private float moveSpeed = 1f;
 
     private int score;
     private TextMeshProUGUI scoreTXT;
-    private int snakeBodySize = 0;
+    public int snakeBodySize = 0;
     private List<SnakeMovePosition> snakeMovePositionList;
     private List<SnakeBodyPart> snakeBodyPartList;
     private float gridMoveTimer = 0f;
@@ -51,6 +51,8 @@ public class Snake : MonoBehaviour
         SetValidRandomDirection();
         transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
     }
+    public bool WrappedMode;
+    private BoxCollider2D Collider;
 
     private void Start()
     {
@@ -65,7 +67,9 @@ public class Snake : MonoBehaviour
         gridMoveTimer = 0f;
         GridMoveTimerMax = 0.25f;     
         slider = GameObject.Find("Slider" + ID).GetComponent<Slider>();
-        slider.value = startingHealth;        
+        slider.value = startingHealth;
+        WrappedMode = true;
+        Collider = GetComponent<BoxCollider2D>();
     }
 
     private void Update()
@@ -75,12 +79,42 @@ public class Snake : MonoBehaviour
             case true:
                 HandleInput();
                 HandleGridMovement();
+                if (checkOutOfBounds())
+                {
+                    if (WrappedMode)
+                    {
+                        setWrappedPosition();
+                    }
+                    else
+                    {
+                        Alive = false;
+                    }
+                }
                 break;
             case false:
                 break;
         }
     }
-
+    private void setWrappedPosition()
+    {
+        if (GridPosition.x < -GameAssets.i.Width)
+        {
+            GridPosition = new Vector2Int((int)GameAssets.i.Width, (int)transform.position.y);
+        }
+        if (GridPosition.x > GameAssets.i.Width)
+        {
+            GridPosition = new Vector2Int((int)-GameAssets.i.Width, (int)transform.position.y);
+        }
+        if (GridPosition.y > GameAssets.i.Height)
+        {
+            GridPosition = new Vector2Int((int)transform.position.x, (int)-GameAssets.i.Height);
+        }
+        if (GridPosition.y < -GameAssets.i.Height)
+        {
+            GridPosition = new Vector2Int((int)transform.position.x, (int)GameAssets.i.Height);
+        }
+        transform.position = new Vector3(GridPosition.x, GridPosition.y);
+    }
     private void UpdateHealthBar()
     {
         if (snakeAte)
@@ -96,7 +130,16 @@ public class Snake : MonoBehaviour
             }
         }
     }
-
+    private void die()
+    {
+        Alive = false;
+        for (int i = 0; i < snakeBodyPartList.Count; i++)
+        {
+            snakeBodyPartList[i].removeCollider();
+        }
+        Collider.enabled = false;
+    }
+        
     private void SetValidRandomDirection()
     {
         var validPositions = new List<Direction>();
@@ -117,6 +160,27 @@ public class Snake : MonoBehaviour
             validPositions.Add(Direction.Up);
         }
         gridMoveDirection = validPositions[Random.Range(0, validPositions.Count)];
+    }
+
+    private bool checkOutOfBounds()
+    {
+        if (GridPosition.x > GameAssets.i.Width)
+        {
+            return true;
+        }
+        if (GridPosition.x < -GameAssets.i.Width)
+        {
+            return true;
+        }
+        if (GridPosition.y > GameAssets.i.Height)
+        {
+            return true;
+        }
+        if (GridPosition.y < -GameAssets.i.Height)
+        {
+            return true;
+        }
+        return false;
     }
 
     private void HandleInput()
@@ -262,19 +326,47 @@ public class Snake : MonoBehaviour
             }
         }
         if (collision.CompareTag("Player"))
-        {
+        {            
+            int enemyID = collision.gameObject.GetComponent<Snake>().ID;
             // Game Over!
+            Debug.Log(collision.gameObject.GetComponent<Snake>().Alive);
+
+            checkHeadToHeadWinner(this.ID, enemyID);
+            
+        }
+        if (collision.CompareTag("Body"))
+        {
             Debug.Log("Body Collision");
-            Alive = false;
+            die();             
         }
         if (collision.CompareTag("Wall"))
         {
             // Game Over!
             Debug.Log("Wall Collision");
-            Alive = false;
+            die();
         }
     }
 
+    private void checkHeadToHeadWinner(int playerID, int enemyID)
+    {
+        Snake playerSnake = this;
+        Snake enemySnake = null;
+
+            GameObject[] possibleEnemySnakeObjects = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject possibleEnemySnakeObject in possibleEnemySnakeObjects)
+            {
+                Snake possibleEnemySnake = possibleEnemySnakeObject.GetComponent<Snake>();
+                if (possibleEnemySnake.ID == enemyID)
+                {                    
+                    enemySnake = possibleEnemySnake;
+                }
+            }
+        
+        if (playerSnake.snakeBodySize <= enemySnake.snakeBodySize)
+        { 
+            die();
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Wall"))
@@ -304,11 +396,12 @@ public class Snake : MonoBehaviour
     {
         private SnakeMovePosition snakeMovePosition;
         private Transform transform;
-        private Color myColor;
+        private Color myColor;       
+        private GameObject snakeBodyGameObject;
         public SnakeBodyPart(int bodyIndex, Color color)
         {
             myColor = color;
-            GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
+            snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
             snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteVertical;
             transform = snakeBodyGameObject.transform;            
             snakeBodyGameObject.GetComponent<SpriteRenderer>().color = color;
@@ -316,9 +409,6 @@ public class Snake : MonoBehaviour
         public void SetSnakeMovePosition(SnakeMovePosition snakeMovePosition)
         {
             this.snakeMovePosition = snakeMovePosition;
-            Destroy(this.transform.gameObject);
-            GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
-            snakeBodyGameObject.GetComponent<SpriteRenderer>().color = myColor;
             switch (snakeMovePosition.GetDirection())
             {
                 default:
@@ -400,10 +490,13 @@ public class Snake : MonoBehaviour
                     break;
             }
             snakeBodyGameObject.AddComponent<BoxCollider2D>();
-            snakeBodyGameObject.tag = "Player";
+            snakeBodyGameObject.tag = "Body";
             transform.position = new Vector3(snakeMovePosition.GetGridPosition().x, snakeMovePosition.GetGridPosition().y);
         }
-
+        public void removeCollider()
+        {
+            Destroy(snakeBodyGameObject.GetComponent<BoxCollider2D>());
+        }
         public Vector2Int GetGridPosition()
         {
             return snakeMovePosition.GetGridPosition();
