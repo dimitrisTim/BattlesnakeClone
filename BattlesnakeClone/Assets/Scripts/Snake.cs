@@ -5,6 +5,7 @@ using UnityEngine;
 using CodeMonkey.Utils;
 using UnityEngine.UI;
 using System.Linq;
+using UnityEditor;
 
 public class Snake : MonoBehaviour
 {
@@ -264,14 +265,38 @@ public class Snake : MonoBehaviour
         }
     }
 
-    private void HandleGridMovement()
+    public List<Direction> GetPossibleActions()
+    {
+        var possibleActions = new List<Direction>();
+        simulationObjects.allSimuObjects.ForEach(x=> Undo.RecordObject(x, "PossibleActions"));
+        foreach(Direction direction in System.Enum.GetValues(typeof(Direction)))
+        {   
+            //maybe check if direction is possible because of head direction            
+            gridMoveDirection = direction;
+            // call handle grid movement
+            if (this.Alive)
+            {
+                possibleActions.Add(direction);
+            }
+            Undo.PerformUndo();
+        }
+        return possibleActions;
+    }
+
+    public void HandleGridMovement()
     { 
         gridMoveTimer += Time.deltaTime;
         if (gridMoveTimer >= GridMoveTimerMax)
         {                      
             gridMoveTimer -= GridMoveTimerMax;
 
-            
+            if (this.IsAiPlayer && !this.IsSimulation)
+            {
+                var snakes = simulationObjects.allSimuObjects.SelectMany(x => x.GetComponentsInChildren<Snake>()).ToList();
+                var you = snakes.Where(x=> x.ID == this.ID).FirstOrDefault();
+                var enemy = snakes.Where(x => x.ID != this.ID).FirstOrDefault();
+                var alphaBeta = new AlphaBeta(new List<Snake>(){ you, enemy});
+            }
 
             SnakeMovePosition previousSnakeMovePosition = null;
             if (snakeMovePositionList.Count > 0)
