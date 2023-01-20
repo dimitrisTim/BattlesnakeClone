@@ -8,7 +8,7 @@ using System.Linq;
 
 public class Snake : MonoBehaviour
 {
-    private enum Direction
+    public enum Direction
     {
         Left,
         Right,
@@ -25,7 +25,7 @@ public class Snake : MonoBehaviour
     private TextMeshProUGUI scoreTXT;
     public int snakeBodySize = 0;
     private List<SnakeMovePosition> snakeMovePositionList;
-    private List<SnakeBodyPart> snakeBodyPartList;
+    public List<SnakeBodyPart> snakeBodyPartList;
     private float gridMoveTimer = 0f;
     public float GridMoveTimerMax = 0.99f;
     public bool Alive {get; set;}
@@ -34,6 +34,7 @@ public class Snake : MonoBehaviour
     public IKeyStrategy KeyStrategy {get; set;}
 
     private Slider slider;
+    public int Health {get {return (int)(slider.value * 100);}}
     private float fillSpeed = 0.5f;
     private float startingHealth = 1f;
 
@@ -392,12 +393,13 @@ public class Snake : MonoBehaviour
         //CreateSnakeBodyPart();
         snakeAte = true;        
     }
-    private class SnakeBodyPart
+    public class SnakeBodyPart
     {
         private SnakeMovePosition snakeMovePosition;
         private Transform transform;
         private Color myColor;       
         private GameObject snakeBodyGameObject;
+        public Vector3 TransformPosition {get {return transform.position;}}
         public SnakeBodyPart(int bodyIndex, Color color)
         {
             myColor = color;
@@ -502,7 +504,7 @@ public class Snake : MonoBehaviour
             return snakeMovePosition.GetGridPosition();
         }
     }
-    private class SnakeMovePosition
+    public class SnakeMovePosition
     {
         private SnakeMovePosition previousSnakeMovePosition;
         private Vector2Int gridPosition;
