@@ -28,6 +28,7 @@ public class GameHandler : MonoBehaviour
             Quaternion.identity);
         newSnake.GetComponent<Snake>().KeyStrategy = new WASDStrategy();
         newSnake.GetComponent<Snake>().ID = 1;
+        newSnake.GetComponent<Snake>().IsAiPlayer = true;
         snakes.Add(newSnake);
 
         var newSnake2 = Instantiate(snakePrefab, new Vector3(
@@ -36,7 +37,7 @@ public class GameHandler : MonoBehaviour
         newSnake2.GetComponent<Snake>().KeyStrategy = new ArrowsStrategy();
         newSnake2.GetComponent<Snake>().ID = 2;
         snakes.Add(newSnake2);
-
+        
         timerObj = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
         SetPlayerNameColors();
     }
@@ -73,24 +74,24 @@ public class GameHandler : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
         timerObj.text = "";
-        SetSnakeScripts(true);
+        SetSnakeScripts(true);   
     }
 
     /// <summary>
     /// Can prevent snakes from moving before the game starts
     /// </summary>
     private void SetSnakeScripts(bool enabled)
-    {
+    {        
         foreach (var snake in snakes)
         {
             snake.GetComponent<Snake>().enabled = enabled;
-        }
+        }        
     }
 
     private void Update()
     {
         if (Input.GetKeyUp(KeyCode.Escape))
-            ShowPauseMenu();
+            ShowPauseMenu();        
     }
 
     public void ShowPauseMenu()
