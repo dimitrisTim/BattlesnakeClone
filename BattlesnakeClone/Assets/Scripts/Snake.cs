@@ -5,6 +5,7 @@ using UnityEngine;
 using CodeMonkey.Utils;
 using UnityEngine.UI;
 using System.Linq;
+using UnityEditor;
 
 public class Snake : MonoBehaviour, System.ICloneable
 {
@@ -17,32 +18,38 @@ public class Snake : MonoBehaviour, System.ICloneable
     }
 
     private Direction gridMoveDirection;
-    public Vector2Int GridPosition {get; private set;}
+    public Vector2Int GridPosition;
     private Rigidbody2D body;
     [SerializeField] private float moveSpeed = 1f;
 
     private int score;
     private TextMeshProUGUI scoreTXT;
-    private int snakeBodySize = 0;
-    private List<SnakeMovePosition> snakeMovePositionList;
-    public List<SnakeBodyPart> snakeBodyPartList;
+    public int snakeBodySize = 0;
+    private List<SnakeMovePosition> snakeMovePositionList = new List<SnakeMovePosition>();
+    public List<SnakeBodyPart> snakeBodyPartList = new List<SnakeBodyPart>();
     private float gridMoveTimer = 0f;
-    public float GridMoveTimerMax = 0.99f;
-    public bool Alive {get; set;}
+    public float GridMoveTimerMax = 0.1f;
+    public bool Alive;
     private bool snakeAte = false;
     private int prevLength;
     public IKeyStrategy KeyStrategy {get; set;}
 
     private Slider slider;
-    public int Health {get {return (int)(slider.value * 100);} set{slider.value = value;}}
-    private float fillSpeed = 0.5f;
+    public float Health;
+    private float fillSpeed = 0.2f;
     private float startingHealth = 1f;
 
-    public int ID {get; set;}
+    public int ID;
     public GameObject wallPrefab;
     public bool CheckAbility {get; set;}
 
     public Color MyColor {get; private set;}
+
+    public bool IsSimulation {get; set;}
+
+    public bool IsAiPlayer {get; set;}
+
+    private SimulationObjects simulationObjects;
 
     private void Awake()
     {
@@ -51,22 +58,37 @@ public class Snake : MonoBehaviour, System.ICloneable
         
         SetValidRandomDirection();
         transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
+
+        IsSimulation = false;
     }
+    public bool WrappedMode;
+    public BoxCollider2D Collider;
+
+    private bool isSimuRunning = false;
 
     private void Start()
-    {
-        prevLength = 0;
-        GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);        
-        snakeBodyPartList = new List<SnakeBodyPart>();
-        snakeMovePositionList = new List<SnakeMovePosition>();
-        score = 0;
-        scoreTXT = GameObject.Find("Score" + ID).GetComponent<TextMeshProUGUI>();
-        scoreTXT.text = "Score: " + score;     
-        Alive = true;
-        gridMoveTimer = 0f;
-        GridMoveTimerMax = 0.25f;     
-        slider = GameObject.Find("Slider" + ID).GetComponent<Slider>();
-        slider.value = startingHealth;        
+    {                        
+        if (!IsSimulation)
+        {
+            prevLength = 0;                   
+            score = 0;
+            Alive = true;
+            gridMoveTimer = 0f;
+            Health = startingHealth * 100;
+            WrappedMode = true;
+
+            simulationObjects = ScriptableObject.CreateInstance<SimulationObjects>();
+            simulationObjects.Init(LayerMask.NameToLayer("Simulation" + this.ID));
+
+            scoreTXT = GameObject.Find("Score" + ID).GetComponent<TextMeshProUGUI>();
+            scoreTXT.text = "Score: " + score;     
+
+            GridMoveTimerMax = 0.25f;
+            slider = GameObject.Find("Slider" + ID).GetComponent<Slider>();
+            slider.value = startingHealth;            
+        }        
+        GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y); 
+        Collider = GetComponent<BoxCollider2D>();
     }
 
     private void Update()
@@ -75,29 +97,73 @@ public class Snake : MonoBehaviour, System.ICloneable
         {
             case true:
                 HandleInput();
-                HandleGridMovement();
+                HandleGridMovement();                
+                if (checkOutOfBounds())
+                {
+                    if (WrappedMode)
+                    {
+                        setWrappedPosition();
+                    }
+                    else
+                    {
+                        Alive = false;
+                    }
+                }
                 break;
             case false:
                 break;
-        }
+        }        
     }
-
+    private void setWrappedPosition()
+    {
+        if (GridPosition.x < -GameAssets.i.Width)
+        {
+            GridPosition = new Vector2Int((int)GameAssets.i.Width, (int)transform.position.y);
+        }
+        if (GridPosition.x > GameAssets.i.Width)
+        {
+            GridPosition = new Vector2Int((int)-GameAssets.i.Width, (int)transform.position.y);
+        }
+        if (GridPosition.y > GameAssets.i.Height)
+        {
+            GridPosition = new Vector2Int((int)transform.position.x, (int)-GameAssets.i.Height);
+        }
+        if (GridPosition.y < -GameAssets.i.Height)
+        {
+            GridPosition = new Vector2Int((int)transform.position.x, (int)GameAssets.i.Height);
+        }
+        transform.position = new Vector3(GridPosition.x, GridPosition.y);
+    }
     private void UpdateHealthBar()
     {
         if (snakeAte)
         {
-            slider.value = startingHealth;
+            Health = startingHealth * 100;
         }
         else
         {
-            slider.value -= fillSpeed * Time.deltaTime;
-            if (slider.value <= 0)
+            Health -= 1;
+            if (Health <= 0)
             {
                 Alive = false;
             }
         }
+        if (!IsSimulation)
+        {
+            slider.value = Health / 100;
+        }        
     }
-
+    private void die()
+    {
+        Alive = false;
+        Debug.Log("Snake " + this.name + " died");
+        for (int i = 0; i < snakeBodyPartList.Count; i++)
+        {
+            snakeBodyPartList[i].removeCollider();
+        }
+        Collider.enabled = false;
+    }
+        
     private void SetValidRandomDirection()
     {
         var validPositions = new List<Direction>();
@@ -120,8 +186,33 @@ public class Snake : MonoBehaviour, System.ICloneable
         gridMoveDirection = validPositions[Random.Range(0, validPositions.Count)];
     }
 
+    private bool checkOutOfBounds()
+    {
+        if (GridPosition.x > GameAssets.i.Width)
+        {
+            return true;
+        }
+        if (GridPosition.x < -GameAssets.i.Width)
+        {
+            return true;
+        }
+        if (GridPosition.y > GameAssets.i.Height)
+        {
+            return true;
+        }
+        if (GridPosition.y < -GameAssets.i.Height)
+        {
+            return true;
+        }
+        return false;
+    }
+
     private void HandleInput()
     {   
+        if (this.IsSimulation)
+        {
+            return;
+        }
         if (KeyStrategy.CheckUp())
         {
             if (gridMoveDirection != Direction.Down)
@@ -149,7 +240,7 @@ public class Snake : MonoBehaviour, System.ICloneable
             {
                 gridMoveDirection = Direction.Right;
             }
-        }           
+        }
     }    
 
     public Vector2Int GetNewGridPosition(int distance = 1)
@@ -169,38 +260,91 @@ public class Snake : MonoBehaviour, System.ICloneable
         }
     }
 
-    private void HandleGridMovement()
+    public List<Direction> GetPossibleActions()
+    {
+        isSimuRunning = true;
+        var possibleActions = new List<Direction>();
+        Debug.Log("Current Grid Position: " + GridPosition);        
+        foreach(Direction direction in System.Enum.GetValues(typeof(Direction)))
+        {
+            Undo.RecordObject(this, "PossibleActions");
+            PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+            
+            //maybe check if direction is possible because of head direction                       
+            gridMoveDirection = direction;
+            ExecuteMovement();
+            var occupied = Physics2D.OverlapBox(GridPosition, new Vector2(0.5f, 0.5f), 0);
+            var collisionDetected = occupied != null && 
+                occupied.gameObject.CompareTag("Player") && 
+                occupied.gameObject.CompareTag("Body");
+            // Debug.Log("Trying direction " + direction);
+            // Debug.Log("New Grid Position: " + GridPosition);
+            // Debug.Log("Simulation Collision detected: " + collisionDetected);
+            if (this.Alive && !collisionDetected)
+            {
+                possibleActions.Add(direction);
+            }
+            else
+            {
+                Debug.Log("Collision detected and snake is " + (this.Alive ? "alive" : "dead"));
+            } 
+            Undo.PerformUndo();
+            //Debug.Log("Undo Position: " + GridPosition);
+        }
+        isSimuRunning = false;
+        return possibleActions;
+    }
+
+    public void HandleGridMovement()
     { 
         gridMoveTimer += Time.deltaTime;
         if (gridMoveTimer >= GridMoveTimerMax)
-        {
+        {                      
             gridMoveTimer -= GridMoveTimerMax;
-            SnakeMovePosition previousSnakeMovePosition = null;
-            if (snakeMovePositionList.Count > 0)
-            {
-                previousSnakeMovePosition = snakeMovePositionList[0];
-            }
-            SnakeMovePosition snakeMovePosition = new SnakeMovePosition(previousSnakeMovePosition, GridPosition, gridMoveDirection);
-            snakeMovePositionList.Insert(0, snakeMovePosition);
 
-            GridPosition = GetNewGridPosition();
+            if (this.IsAiPlayer && !this.IsSimulation)
+            {    
+                simulationObjects.SetSimuObjects();                
 
-            if (snakeAte)
-            {
-                snakeBodySize++;
-                CreateSnakeBodyPart();                
+                var snakes = simulationObjects.GetSnakes();
+                var you = snakes.Where(x=> x.ID == this.ID).FirstOrDefault();
+                // var enemy = snakes.Where(x => x.ID != this.ID).FirstOrDefault();
+                // var alphaBeta = new AlphaBeta(new List<Snake>(){ you, enemy});
+                var test = you.GetPossibleActions();
+                Debug.Log("Possible Actions: " + test.Count);
             }
-            if (snakeMovePositionList.Count >= snakeBodySize + 1)
-            {
-                snakeMovePositionList.RemoveAt(snakeMovePositionList.Count - 1);
-            }
-            UpdateHealthBar();
-            snakeAte = false;
-            UpdateSnakeBodyParts();
-            transform.position = new Vector3(GridPosition.x, GridPosition.y);
-            transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);           
+
+            ExecuteMovement();
+            
         }
+    }
 
+    private void ExecuteMovement()
+    {        
+        SnakeMovePosition previousSnakeMovePosition = null;
+        if (snakeMovePositionList.Count > 0)
+        {
+            previousSnakeMovePosition = snakeMovePositionList[0];
+        }
+        SnakeMovePosition snakeMovePosition = new SnakeMovePosition(previousSnakeMovePosition, GridPosition, gridMoveDirection);
+        snakeMovePositionList.Insert(0, snakeMovePosition);
+
+        GridPosition = GetNewGridPosition();
+
+        if (snakeAte)
+        {
+            snakeBodySize++;
+            CreateSnakeBodyPart();                
+        }
+        if (snakeMovePositionList.Count >= snakeBodySize + 1)
+        {
+            snakeMovePositionList.RemoveAt(snakeMovePositionList.Count - 1);
+        }
+        UpdateHealthBar();
+        snakeAte = false;
+        UpdateSnakeBodyParts();
+        transform.position = new Vector3(GridPosition.x, GridPosition.y);
+        transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
     }
 
     private void CreateSnakeBodyPart()
@@ -224,10 +368,6 @@ public class Snake : MonoBehaviour, System.ICloneable
         return n;
     }
 
-   public Vector2Int GetGridPosition()
-    {
-        return GridPosition;
-    }
    private void createSnakeBody()
     {
         snakeBodyPartList.Add(new SnakeBodyPart(snakeBodyPartList.Count, this.MyColor));
@@ -238,11 +378,14 @@ public class Snake : MonoBehaviour, System.ICloneable
     }
    private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log("Collision detected");
+        Debug.Log("Collision detected between " + this.gameObject.name + " and " + collision.gameObject.name);
         if (collision.CompareTag("Scoring"))
         {
             score++;
-            scoreTXT.text = "Score: " + score;
+            if (!this.IsSimulation)
+            {
+                scoreTXT.text = "Score: " + score;    
+            }            
             grow();
             // createSnakeBody();
             Destroy(collision.gameObject);
@@ -263,19 +406,45 @@ public class Snake : MonoBehaviour, System.ICloneable
             }
         }
         if (collision.CompareTag("Player"))
+        {            
+            int enemyID = collision.gameObject.GetComponent<Snake>().ID;
+
+            checkHeadToHeadWinner(this.ID, enemyID);
+            
+        }
+        if (collision.CompareTag("Body"))
         {
-            // Game Over!
             Debug.Log("Body Collision");
-            Alive = false;
+            die();             
         }
         if (collision.CompareTag("Wall"))
         {
             // Game Over!
             Debug.Log("Wall Collision");
-            Alive = false;
+            die();
         }
     }
 
+    private void checkHeadToHeadWinner(int playerID, int enemyID)
+    {
+        Snake playerSnake = this;
+        Snake enemySnake = null;
+
+            GameObject[] possibleEnemySnakeObjects = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject possibleEnemySnakeObject in possibleEnemySnakeObjects)
+            {
+                Snake possibleEnemySnake = possibleEnemySnakeObject.GetComponent<Snake>();
+                if (possibleEnemySnake.ID == enemyID)
+                {                    
+                    enemySnake = possibleEnemySnake;
+                }
+            }
+        
+        if (playerSnake.snakeBodySize <= enemySnake.snakeBodySize)
+        { 
+            die();
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Wall"))
@@ -302,30 +471,17 @@ public class Snake : MonoBehaviour, System.ICloneable
         snakeAte = true;        
     }
 
-    public object Clone()
-    {
-        return new Snake()
-        {
-            GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y),
-            gridMoveDirection = this.gridMoveDirection,
-            snakeMovePositionList = this.snakeMovePositionList.Select(x => (SnakeMovePosition)x.Clone()).ToList(),
-            snakeBodyPartList = this.snakeBodyPartList.Select(x => (SnakeBodyPart)x.Clone()).ToList(),
-            Alive = this.Alive,
-            score = this.score,
-            Health = this.Health,
-        };        
-    }
-
     public class SnakeBodyPart
     {
         private SnakeMovePosition snakeMovePosition;
         private Transform transform;
+        private Color myColor;       
+        private GameObject snakeBodyGameObject;
         public Vector3 TransformPosition {get {return transform.position;}}
-        private Color myColor;
         public SnakeBodyPart(int bodyIndex, Color color)
         {
             myColor = color;
-            GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
+            snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
             snakeBodyGameObject.GetComponent<SpriteRenderer>().sprite = GameAssets.i.snakeBodySpriteVertical;
             transform = snakeBodyGameObject.transform;            
             snakeBodyGameObject.GetComponent<SpriteRenderer>().color = color;
@@ -333,9 +489,6 @@ public class Snake : MonoBehaviour, System.ICloneable
         public void SetSnakeMovePosition(SnakeMovePosition snakeMovePosition)
         {
             this.snakeMovePosition = snakeMovePosition;
-            Destroy(this.transform.gameObject);
-            GameObject snakeBodyGameObject = new GameObject("SnakeBody", typeof(SpriteRenderer));
-            snakeBodyGameObject.GetComponent<SpriteRenderer>().color = myColor;
             switch (snakeMovePosition.GetDirection())
             {
                 default:
@@ -417,10 +570,13 @@ public class Snake : MonoBehaviour, System.ICloneable
                     break;
             }
             snakeBodyGameObject.AddComponent<BoxCollider2D>();
-            snakeBodyGameObject.tag = "Player";
+            snakeBodyGameObject.tag = "Body";
             transform.position = new Vector3(snakeMovePosition.GetGridPosition().x, snakeMovePosition.GetGridPosition().y);
         }
-
+        public void removeCollider()
+        {
+            Destroy(snakeBodyGameObject.GetComponent<BoxCollider2D>());
+        }
         public Vector2Int GetGridPosition()
         {
             return snakeMovePosition.GetGridPosition();
