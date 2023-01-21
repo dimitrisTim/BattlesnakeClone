@@ -29,6 +29,7 @@ public class GameHandler : MonoBehaviour
         newSnake.GetComponent<Snake>().KeyStrategy = new WASDStrategy();
         newSnake.GetComponent<Snake>().ID = 1;
         newSnake.GetComponent<Snake>().IsAiPlayer = true;
+        newSnake.name = "AI_Snake";
         snakes.Add(newSnake);
 
         var newSnake2 = Instantiate(snakePrefab, new Vector3(
@@ -36,6 +37,7 @@ public class GameHandler : MonoBehaviour
             Quaternion.identity);
         newSnake2.GetComponent<Snake>().KeyStrategy = new ArrowsStrategy();
         newSnake2.GetComponent<Snake>().ID = 2;
+        newSnake2.name = "Player_Snake";
         snakes.Add(newSnake2);
         
         timerObj = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();

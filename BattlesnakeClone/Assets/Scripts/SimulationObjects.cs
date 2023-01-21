@@ -16,7 +16,6 @@ public class SimulationObjects : ScriptableObject
 
     public void SetSimuObjects()
     {
-        Debug.Log("Update for SimulationObjects");
         allSimuObjects.ForEach(DestroyImmediate);
         allSimuObjects.Clear();
 
@@ -28,6 +27,11 @@ public class SimulationObjects : ScriptableObject
         CreateSpawnedObjectCopies(GameObject.FindGameObjectsWithTag("BrickSphere"));
     }
 
+    public List<Snake> GetSnakes()
+    {
+        return allSimuObjects.Where(x => x.CompareTag("Player")).Select(x => x.GetComponent<Snake>()).ToList();
+    }
+
     private void CreateSpawnedObjectCopies(GameObject[] spawnedObjects)
     {
         foreach (var spawnedObject in spawnedObjects)
@@ -36,13 +40,14 @@ public class SimulationObjects : ScriptableObject
             {
                 continue;
             }
-            var simuSpawnedGoodie = Instantiate(spawnedObject);
+            var simuSpawnedObj = Instantiate(spawnedObject);
             if (spawnedObject.CompareTag("Player"))
             {
-                simuSpawnedGoodie.GetComponent<Snake>().IsSimulation = true;
+                simuSpawnedObj.GetComponent<Snake>().IsSimulation = true;
+                simuSpawnedObj.GetComponent<BoxCollider2D>().enabled = false; 
             }
-            simuSpawnedGoodie.layer = this.SimLayerID;
-            allSimuObjects.Add(simuSpawnedGoodie);
+            simuSpawnedObj.layer = this.SimLayerID;
+            allSimuObjects.Add(simuSpawnedObj);
         }
     }        
 }
