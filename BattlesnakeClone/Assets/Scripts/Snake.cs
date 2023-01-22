@@ -269,12 +269,12 @@ public class Snake : MonoBehaviour
         var possibleActions = new List<Direction>();
         foreach(Direction direction in System.Enum.GetValues(typeof(Direction)))
         {
-            position = new Vector3(GridPosition.x, GridPosition.y, 0);
+            Vector3 position = new Vector3(GridPosition.x, GridPosition.y, 0);
             StartRecording(position);
             
             //maybe check if direction is possible because of head direction                                   
             ExecuteMovement(direction, false);
-            var occupied = Physics2D.OverlapBox(GridPosition, new Vector2(0.1f, 0.1f), 0);
+            var occupied = Physics2D.OverlapBox(GridPosition, new Vector2(0.3f, 0.3f), 0);
             var collisionDetected = occupied != null && 
                 (occupied.gameObject.CompareTag("Player") || 
                 occupied.gameObject.CompareTag("Body"));
@@ -286,6 +286,7 @@ public class Snake : MonoBehaviour
             {
                 Debug.Log("Simulation snake ate");
                 this.Health = 100;
+                this.snakeBodySize++;
             }
             if (this.Alive && !collisionDetected)
             {

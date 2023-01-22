@@ -179,7 +179,8 @@ public class AlphaBeta: ScriptableObject
         var boardControl = CalculateBoardControl(you, enemy);
         var lengthAdvantage = CalculateLengthAdvantage(you);
         var health = Math.Sqrt(you.Health) * 0.1f;
-        var value = 0.2f * boardControl +  0.6f * lengthAdvantage + 0.8f * ((float)health);
+        var value = 0.1f * boardControl +  0.3f * lengthAdvantage + 0.5f * ((float)health);
+        Debug.Log("Eval value: " + value);
         if (value > 0)
         {
             return value * 0.5f;
@@ -200,12 +201,12 @@ public class AlphaBeta: ScriptableObject
         var prevSimDepth = 0;
         //while (!TimeExpired)
         //Save start state
-        for (int i = 0; i<2;i++)
+        for (int i = 0; i<3;i++)
         {
             //Debug.Log("Start AlphaBeta: " + maxDepth);
             //sim depth
-            youPosition3d = = new Vector3(youSnake.GridPosition.x, youSnake.GridPosition.y, 0);
-            enemyPosition3d = new Vector3(enemySnake.GridPosition.x, enemySnake.GridPosition.y, 0);
+            Vector3 youPosition3d = new Vector3(youSnake.GridPosition.x, youSnake.GridPosition.y, 0);
+            Vector3 enemyPosition3d = new Vector3(enemySnake.GridPosition.x, enemySnake.GridPosition.y, 0);
             youSnake.StartRecording(youPosition3d);
             enemySnake.StartRecording(enemyPosition3d);
             var m = MaxAlphaBeta(-2, 2, 0, depth);
