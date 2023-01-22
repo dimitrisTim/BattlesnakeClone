@@ -41,15 +41,14 @@ public class Snake : MonoBehaviour
     public GameObject wallPrefab;
     public bool CheckAbility {get; set;}
 
-    public AudioSource audioSource1, audioSource2;
-    public AudioClip clip1 , clip2;
-    public enum AudioClipName {clip1, clip2};
+    public AudioSource audioSource1, audioSource2, audioSource3, audioSource4;
+    public AudioClip clip1 , clip2, clip3, clip4;
     private void Start()
     {
         audioSource1 = GetComponent<AudioSource>();
-        audioSource1.clip = clip1;
         audioSource2 = GetComponent<AudioSource>();
-        audioSource2.clip = clip2;
+        audioSource3 = GetComponent<AudioSource>();
+        audioSource4 = GetComponent<AudioSource>();
         prevLength = 0;
         GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);
         SetValidRandomDirection();
@@ -255,6 +254,8 @@ public class Snake : MonoBehaviour
         if (collision.CompareTag("BrickSphere"))
         {
             Debug.Log("BrickSphere detected");
+            audioSource3.clip = clip3;
+            audioSource3.Play();
             Destroy(collision.gameObject);
             // If ability not already active, add it
             if (this.gameObject.TryGetComponent<WallAbility>(out WallAbility wallAbility) == false)
