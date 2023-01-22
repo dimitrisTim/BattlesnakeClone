@@ -8,8 +8,8 @@ public class SpeedFoodSpawner : AbstractSpawner
     protected override void Awake()
     {
         this.checkDelete = false;
-        this.spawnMin = 30f;
-        this.spawnMax = 60f;
+        this.spawnMin = 20f;
+        this.spawnMax = 40f;
         base.Awake();
     }
     protected override bool SpawnCondition()

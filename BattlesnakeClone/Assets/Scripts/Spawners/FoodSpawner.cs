@@ -7,8 +7,8 @@ public class FoodSpawner : AbstractSpawner
     protected override void Awake()
     {
         this.checkDelete = false;
-        this.spawnMin = 10f;
-        this.spawnMax = 10f;
+        this.spawnMin = 3f;
+        this.spawnMax = 8f;
         base.Awake();
     }
 }

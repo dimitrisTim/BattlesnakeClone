@@ -43,11 +43,17 @@ public class Snake : MonoBehaviour
 
     public Color MyColor {get; private set;}
 
+    public AudioSource audioSource1, audioSource2, audioSource3, audioSource4;
+    public AudioClip clip1, clip2, clip3, clip4;
+
     private void Awake()
     {
         MyColor = new Color(Random.value, Random.value, Random.value, 1.0f);
         this.GetComponent<SpriteRenderer>().color = MyColor;
-        
+        audioSource1 = GetComponent<AudioSource>();
+        audioSource2 = GetComponent<AudioSource>();
+        audioSource3 = GetComponent<AudioSource>();
+        audioSource4 = GetComponent<AudioSource>();
         SetValidRandomDirection();
         transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
     }
@@ -138,6 +144,8 @@ public class Snake : MonoBehaviour
             snakeBodyPartList[i].removeCollider();
         }
         Collider.enabled = false;
+        audioSource4.clip = clip4;
+        audioSource4.Play();
     }
         
     private void SetValidRandomDirection()
@@ -306,6 +314,8 @@ public class Snake : MonoBehaviour
         {
             score++;
             scoreTXT.text = "Score: " + score;
+            audioSource1.clip = clip1;
+            audioSource1.Play();
             grow();
             // createSnakeBody();
             Destroy(collision.gameObject);
@@ -313,11 +323,15 @@ public class Snake : MonoBehaviour
         if (collision.CompareTag("Speed"))
         {
             Destroy(collision.gameObject);
+            audioSource2.clip = clip2;
+            audioSource2.Play();
             this.gameObject.AddComponent<SpeedAbility>();
         }
         if (collision.CompareTag("BrickSphere"))
         {
             Debug.Log("BrickSphere detected");
+            audioSource3.clip = clip3;
+            audioSource3.Play();
             Destroy(collision.gameObject);
             // If ability not already active, add it
             if (this.gameObject.TryGetComponent<WallAbility>(out WallAbility wallAbility) == false)
