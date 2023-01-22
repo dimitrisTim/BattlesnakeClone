@@ -36,14 +36,14 @@ public class SimulationObjects : ScriptableObject
     {
         foreach (var spawnedObject in spawnedObjects)
         {   
-            if (spawnedObject.CompareTag("Player") && spawnedObject.GetComponent<Snake>().IsSimulation)
+            if (spawnedObject.CompareTag("Player") && spawnedObject.GetComponent<Snake>().IsSimulationPlayer)
             {
                 continue;
             }
             var simuSpawnedObj = Instantiate(spawnedObject);
             if (spawnedObject.CompareTag("Player"))
             {
-                simuSpawnedObj.GetComponent<Snake>().IsSimulation = true;
+                simuSpawnedObj.GetComponent<Snake>().IsSimulationPlayer = true;
                 //simuSpawnedObj.GetComponent<BoxCollider2D>().enabled = false; 
             }
             simuSpawnedObj.layer = this.SimLayerID;

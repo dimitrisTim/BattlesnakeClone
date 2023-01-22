@@ -1,3 +1,5 @@
+
+
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -20,6 +22,8 @@ public class GameHandler : MonoBehaviour
 
     private AlphaBeta alphaBeta;
 
+    private int snakesMovedCounter = 0;
+
     private void Awake()
     {
         GameAssets.i.Width = width;
@@ -33,6 +37,7 @@ public class GameHandler : MonoBehaviour
         newSnake.GetComponent<Snake>().ID = 1;
         newSnake.GetComponent<Snake>().IsAiPlayer = true;
         newSnake.name = "AI_Snake";
+        newSnake.GetComponent<Snake>().OnSnakeMoved.AddListener(RunSimulation);
         snakes.Add(newSnake);
 
         var newSnake2 = Instantiate(snakePrefab, new Vector3(
@@ -50,6 +55,12 @@ public class GameHandler : MonoBehaviour
 
     private void RunSimulation()
     {
+        snakesMovedCounter++;
+        if (snakesMovedCounter < snakes.Count)
+        {            
+            return;
+        }
+        snakesMovedCounter = 0;
         var ai_snake = snakes.Select(x => x.GetComponent<Snake>()).Where(x => x.IsAiPlayer).FirstOrDefault();
         ai_snake.simulationObjects.SetSimuObjects();        
    
@@ -58,9 +69,8 @@ public class GameHandler : MonoBehaviour
         var enemy = simu_snakes.Where(x => x.ID != ai_snake.ID).FirstOrDefault();
 
         alphaBeta = ScriptableObject.CreateInstance<AlphaBeta>();
-        StartCoroutine(alphaBeta.StartTimer());
         alphaBeta.PlayAlphaBeta(new List<Snake>(){you, enemy});
-        ai_snake.NextAIAction = alphaBeta.Bestaction;   
+        ai_snake.NextAIAction = alphaBeta.Bestaction;
 
         // if (you != null)
         // {

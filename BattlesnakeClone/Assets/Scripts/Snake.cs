@@ -46,9 +46,9 @@ public class Snake : MonoBehaviour
 
     public Color MyColor {get; private set;}
 
-    public bool IsSimulation {get; set;}
-
-    public bool IsAiPlayer {get; set;}
+    public bool IsSimulationPlayer;
+    private Vector3 currentPosition;
+    public bool IsAiPlayer;
 
     public SimulationObjects simulationObjects;
 
@@ -62,17 +62,17 @@ public class Snake : MonoBehaviour
         MyColor = new Color(Random.value, Random.value, Random.value, 1.0f);
         this.GetComponent<SpriteRenderer>().color = MyColor;
         
-        SetValidRandomDirection();
-        transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
+        //SetValidRandomDirection();
+        //transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
 
-        IsSimulation = false;
+        IsSimulationPlayer = false;
     }
     public bool WrappedMode;
     public BoxCollider2D Collider;
 
     private void Start()
     {                        
-        if (!IsSimulation)
+        if (!IsSimulationPlayer)
         {
             prevLength = 0;                   
             score = 0;
@@ -152,7 +152,7 @@ public class Snake : MonoBehaviour
                 Alive = false;
             }
         }
-        if (!IsSimulation)
+        if (!IsSimulationPlayer)
         {
             slider.value = Health / 100;
         }        
@@ -213,7 +213,7 @@ public class Snake : MonoBehaviour
 
     private void HandleInput()
     {   
-        if (this.IsSimulation)
+        if (this.IsSimulationPlayer)
         {
             return;
         }
@@ -267,13 +267,10 @@ public class Snake : MonoBehaviour
     public List<Direction> GetPossibleActions()
     {
         var possibleActions = new List<Direction>();
-        Debug.Log("Current Grid Position: " + GridPosition);
-
-        var currentGridPosition = new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z);     
-
         foreach(Direction direction in System.Enum.GetValues(typeof(Direction)))
         {
-            StartRecording(this);
+            position = new Vector3(GridPosition.x, GridPosition.y, 0);
+            StartRecording(position);
             
             //maybe check if direction is possible because of head direction                                   
             ExecuteMovement(direction, false);
@@ -281,12 +278,13 @@ public class Snake : MonoBehaviour
             var collisionDetected = occupied != null && 
                 (occupied.gameObject.CompareTag("Player") || 
                 occupied.gameObject.CompareTag("Body"));
-            var foodCollisionDetected = occupied && occupied.gameObject.CompareTag("Scoring");
-            // Debug.Log("Trying direction " + direction);
-            // Debug.Log("New Grid Position: " + GridPosition);
-            //Debug.Log("Simulation Collision detected: " + collisionDetected);
+            var foodCollisionDetected = occupied !=null && occupied.gameObject.CompareTag("Scoring");
+            Debug.Log("Trying direction " + direction);            
+            Debug.Log("New Grid Position: " + GridPosition);
+            Debug.Log("Simulation Collision detected: " + collisionDetected);
             if (this.Alive && foodCollisionDetected)
             {
+                Debug.Log("Simulation snake ate");
                 this.Health = 100;
             }
             if (this.Alive && !collisionDetected)
@@ -297,10 +295,10 @@ public class Snake : MonoBehaviour
             {
                 Debug.Log("Collision detected and snake is " + (this.Alive ? "alive" : "dead"));
             } 
-            Undo.PerformUndo();
-            //Debug.Log("Undo Position: " + GridPosition);
+            ResetRecordedState();
+            Debug.Log("Undo Position: " + GridPosition);
         }
-        this.transform.position = currentGridPosition;
+        ResetRecordedState();        
         return possibleActions;
     }
 
@@ -311,36 +309,36 @@ public class Snake : MonoBehaviour
         {                      
             gridMoveTimer -= GridMoveTimerMax;   
         
-            if (this.IsAiPlayer && !this.IsSimulation)
+            if (this.IsAiPlayer && !this.IsSimulationPlayer)
             {
                 gridMoveDirection = NextAIAction;
             }            
-
-            ExecuteMovement(gridMoveDirection, false);            
+            if (!this.IsSimulationPlayer)
+            {
+                ExecuteMovement(gridMoveDirection, false);
+            }                  
         }
     }
 
-    public Event GetEvent()
+    public void StartRecording(Vector3 currentGridPosition)
     {
-        return new Event();
-    }
-
-    private void StartRecording(Object obj)
-    {
-        Undo.RecordObject(obj, "PossibleActions");
-        PrefabUtility.RecordPrefabInstancePropertyModifications(obj);
+        currentPosition = currentGridPosition;
+        Undo.RecordObject(this, "PossibleActions" + this.ID);
+        PrefabUtility.RecordPrefabInstancePropertyModifications(this);
     }
 
     public void ResetRecordedState()
     {
         Undo.PerformUndo();
+        transform.position = currentPosition;
     }
 
     public void ExecuteMovement(Direction direction, bool shouldReset = false)
     {        
         if (shouldReset)
         {
-            StartRecording(this);    
+            var position = new Vector3(GridPosition.x, GridPosition.y, 0);
+            StartRecording(position);
         }
         gridMoveDirection = direction;
         SnakeMovePosition previousSnakeMovePosition = null;
@@ -367,7 +365,14 @@ public class Snake : MonoBehaviour
         UpdateSnakeBodyParts();
         transform.position = new Vector3(GridPosition.x, GridPosition.y);
         transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
-        OnSnakeMoved.Invoke();
+        if (shouldReset)
+        {
+            ResetRecordedState();
+        }
+        if (!IsSimulationPlayer)
+        {
+            OnSnakeMoved.Invoke();
+        }
     }
 
     private void CreateSnakeBodyPart()
@@ -405,7 +410,7 @@ public class Snake : MonoBehaviour
         if (collision.CompareTag("Scoring"))
         {
             score++;
-            if (!this.IsSimulation)
+            if (!this.IsSimulationPlayer)
             {
                 scoreTXT.text = "Score: " + score;    
             }            

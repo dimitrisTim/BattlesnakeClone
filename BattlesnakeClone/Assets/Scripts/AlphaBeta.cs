@@ -63,7 +63,7 @@ public class AlphaBeta: ScriptableObject
         }
         if (counter >= threshold)
         {
-            Debug.Log("Threshhold reached");
+            //Debug.Log("Threshhold reached");
             if (whoCalledMe == "min")
             {
                 return -Evaluate(enemySnake, youSnake);
@@ -82,7 +82,7 @@ public class AlphaBeta: ScriptableObject
         Snake.Direction move = Snake.Direction.Right;
         depth += 1;
         var result = IsGameOver(depth, maxDepth, "max");
-        Debug.Log("result" + depth +": " + result);
+        //Debug.Log("result" + depth +": " + result);
         if (depth > this.maxDepth) this.maxDepth = depth;
         if (result != null)
         {
@@ -97,7 +97,7 @@ public class AlphaBeta: ScriptableObject
         {
             possibleActions = youSnake.GetPossibleActions();
         }
-        Debug.Log(possibleActions);
+        //Debug.Log(possibleActions);
         
         var sortedMoves = new Dictionary<Snake.Direction, float>();
         foreach (var action in possibleActions)
@@ -179,7 +179,7 @@ public class AlphaBeta: ScriptableObject
         var boardControl = CalculateBoardControl(you, enemy);
         var lengthAdvantage = CalculateLengthAdvantage(you);
         var health = Math.Sqrt(you.Health) * 0.1f;
-        var value = 0.2f * boardControl +  0.6f * lengthAdvantage + 0.2f * ((float)health);
+        var value = 0.2f * boardControl +  0.6f * lengthAdvantage + 0.8f * ((float)health);
         if (value > 0)
         {
             return value * 0.5f;
@@ -199,10 +199,18 @@ public class AlphaBeta: ScriptableObject
         var depth = 1;
         var prevSimDepth = 0;
         //while (!TimeExpired)
-        for (int i = 0; i<5;i++)
+        //Save start state
+        for (int i = 0; i<2;i++)
         {
-            Debug.Log("Start AlphaBeta: " + maxDepth);
+            //Debug.Log("Start AlphaBeta: " + maxDepth);
+            //sim depth
+            youPosition3d = = new Vector3(youSnake.GridPosition.x, youSnake.GridPosition.y, 0);
+            enemyPosition3d = new Vector3(enemySnake.GridPosition.x, enemySnake.GridPosition.y, 0);
+            youSnake.StartRecording(youPosition3d);
+            enemySnake.StartRecording(enemyPosition3d);
             var m = MaxAlphaBeta(-2, 2, 0, depth);
+            youSnake.ResetRecordedState();
+            enemySnake.ResetRecordedState();
             if (prevSimDepth != maxDepth)
             {
                 prevSimDepth = maxDepth;
@@ -213,11 +221,10 @@ public class AlphaBeta: ScriptableObject
             }
             Bestaction = m.Item2;
             depth += 1;
-            Debug.Log("Depth: " + maxDepth);
-            Debug.Log("best action: "+ Bestaction);
+            //Debug.Log("Depth: " + maxDepth);
+            //Debug.Log("best action: "+ Bestaction);
         }
         //Bestaction = Direction.Up;
-        Debug.Log("Max. Depth: " + maxDepth);        
     }
 
     public IEnumerator StartTimer()
@@ -225,7 +232,7 @@ public class AlphaBeta: ScriptableObject
         // Wait for the specified interval
         yield return new WaitForSeconds(1);
 
-        Debug.Log("Alpha beta timer expired");
+        //Debug.Log("Alpha beta timer expired");
         TimeExpired = true;
     }
 
