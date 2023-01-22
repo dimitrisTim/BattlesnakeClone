@@ -297,6 +297,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   snakePrefab: {fileID: 5353660732003879047, guid: 06ce722a886c2bbcfbb33fc8c17cfeaa, type: 3}
   foodSpawner: {fileID: 1942655784}
+  speedFoodSpawner: {fileID: 92465914}
+  wallSpawner: {fileID: 224417630}
   width: 5
   height: 5
   pauseMenu: {fileID: 228739780}
@@ -557,7 +559,7 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
-        m_CallState: 2
+        m_CallState: 1
 --- !u!114 &292921045
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1298,7 +1300,7 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
-        m_CallState: 2
+        m_CallState: 1
 --- !u!114 &716194325
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1948,7 +1950,7 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
-        m_CallState: 2
+        m_CallState: 1
 --- !u!114 &1352092900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2307,7 +2309,7 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
-        m_CallState: 2
+        m_CallState: 1
 --- !u!114 &1507855200
 MonoBehaviour:
   m_ObjectHideFlags: 0

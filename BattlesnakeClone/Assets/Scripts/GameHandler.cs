@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
+using System.Linq;
 public class GameHandler : MonoBehaviour
 {
     [SerializeField] private GameObject snakePrefab;
     [SerializeField] private FoodSpawner foodSpawner;
+    [SerializeField] private SpeedFoodSpawner speedFoodSpawner;
+    [SerializeField] private WallSpawner wallSpawner;
     public int width;
     public int height;
     private float deathOffset = 0.2f;
@@ -73,6 +75,7 @@ public class GameHandler : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
         timerObj.text = "";
+        timerObj.enabled = false;
         SetSnakeScripts(true);
     }
 
@@ -91,14 +94,18 @@ public class GameHandler : MonoBehaviour
     {
         if (Input.GetKeyUp(KeyCode.Escape))
             ShowPauseMenu();
+        if (snakes.Any(snake => snake.GetComponent<Snake>().Alive == false) && snakes.All(snake => snake.GetComponent<Snake>().enabled == true))
+        {
+            StopEverything();
+        }
     }
 
     public void ShowPauseMenu()
     {
-        // if (!snake.GetComponent<Snake>().Alive)
-        // {
-        //     pauseMenu.transform.Find("Resume").gameObject.SetActive(false);
-        // }        
+        if (snakes.Any(snake => snake.GetComponent<Snake>().Alive == false))
+        {
+            pauseMenu.transform.Find("Resume").gameObject.SetActive(false);
+        }        
         pauseMenu.SetActive(!isPaused);
         Time.timeScale = !isPaused ? 0f : 1f;
         isPaused = !isPaused;
@@ -106,7 +113,7 @@ public class GameHandler : MonoBehaviour
 
     public void ShowStartScreen()
     {
-        //Time.timeScale = 1f;
+        Time.timeScale = 1f;
         SceneManager.LoadScene(0);
     }
 
@@ -117,16 +124,16 @@ public class GameHandler : MonoBehaviour
 
     public void ReloadGame()
     {
-        //Time.timeScale = 1f;
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private void StopEverything()
     {
-        // snake.GetComponent<Snake>().Alive = false;        
-        // snake.GetComponent<Snake>().enabled = false;
-        // foodSpawner.enabled = false;
-        // Time.timeScale = 0f;
-        // ShowPauseMenu();
+        snakes.ForEach(snake => snake.GetComponent<Snake>().enabled = false);
+        foodSpawner.enabled = false;
+        speedFoodSpawner.enabled = false;
+        wallSpawner.enabled = false;        
+        ShowPauseMenu();
     }
 }
