@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine.Events;
 
-public class Snake : MonoBehaviour, System.ICloneable
+public class Snake : MonoBehaviour
 {
     public enum Direction
     {
@@ -281,9 +281,14 @@ public class Snake : MonoBehaviour, System.ICloneable
             var collisionDetected = occupied != null && 
                 (occupied.gameObject.CompareTag("Player") || 
                 occupied.gameObject.CompareTag("Body"));
+            var foodCollisionDetected = occupied && occupied.gameObject.CompareTag("Scoring");
             // Debug.Log("Trying direction " + direction);
             // Debug.Log("New Grid Position: " + GridPosition);
             //Debug.Log("Simulation Collision detected: " + collisionDetected);
+            if (this.Alive && foodCollisionDetected)
+            {
+                this.Health = 100;
+            }
             if (this.Alive && !collisionDetected)
             {
                 possibleActions.Add(direction);

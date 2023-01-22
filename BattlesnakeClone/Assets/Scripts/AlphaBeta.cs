@@ -15,7 +15,7 @@ public class AlphaBeta: ScriptableObject
     private List<Snake> snakes;
     // private List<GameObject> spawnedGoodies;
     // private int[,] boardState;
-    public bool TimeExpired {get; set;}
+    public bool TimeExpired { get; set; } = false;
     private Dictionary<int, Dictionary<Snake.Direction, float>> maxMovesSorted = new Dictionary<int, Dictionary<Snake.Direction, float>>();
     private Dictionary<int, Dictionary<Snake.Direction, float>> minMovesSorted = new Dictionary<int, Dictionary<Snake.Direction, float>>();
     private int maxDepth = 0;
@@ -44,7 +44,7 @@ public class AlphaBeta: ScriptableObject
     {
         if (TimeExpired)
         {
-            Debug.Log("Threshold reached");
+            Debug.Log("TimeExpired");
             return -100;
         }
         var youAlive = youSnake.Alive;
@@ -63,6 +63,7 @@ public class AlphaBeta: ScriptableObject
         }
         if (counter >= threshold)
         {
+            Debug.Log("Threshhold reached");
             if (whoCalledMe == "min")
             {
                 return -Evaluate(enemySnake, youSnake);
@@ -77,10 +78,11 @@ public class AlphaBeta: ScriptableObject
 
     private Tuple<float, Snake.Direction> MaxAlphaBeta(float alpha, float beta, int depth, int maxDepth)
     {
-        float maxv = -2;
+        float maxv = -2f;
         Snake.Direction move = Snake.Direction.Right;
         depth += 1;
         var result = IsGameOver(depth, maxDepth, "max");
+        Debug.Log("result" + depth +": " + result);
         if (depth > this.maxDepth) this.maxDepth = depth;
         if (result != null)
         {
@@ -95,6 +97,8 @@ public class AlphaBeta: ScriptableObject
         {
             possibleActions = youSnake.GetPossibleActions();
         }
+        Debug.Log(possibleActions);
+        
         var sortedMoves = new Dictionary<Snake.Direction, float>();
         foreach (var action in possibleActions)
         {
@@ -194,21 +198,25 @@ public class AlphaBeta: ScriptableObject
 
         var depth = 1;
         var prevSimDepth = 0;
-        // while (!TimeExpired)
-        // {
-        //     var m = MaxAlphaBeta(-2, 2, 0, depth);
-        //     if (prevSimDepth != maxDepth)
-        //     {
-        //         prevSimDepth = maxDepth;
-        //     }
-        //     else
-        //     {
-        //         break;
-        //     }                 
-        //     Bestaction = m.Item2;                  
-        //     depth += 1;
-        // }
-        Bestaction = Direction.Up;
+        //while (!TimeExpired)
+        for (int i = 0; i<5;i++)
+        {
+            Debug.Log("Start AlphaBeta: " + maxDepth);
+            var m = MaxAlphaBeta(-2, 2, 0, depth);
+            if (prevSimDepth != maxDepth)
+            {
+                prevSimDepth = maxDepth;
+            }
+            else
+            {
+                //break;
+            }
+            Bestaction = m.Item2;
+            depth += 1;
+            Debug.Log("Depth: " + maxDepth);
+            Debug.Log("best action: "+ Bestaction);
+        }
+        //Bestaction = Direction.Up;
         Debug.Log("Max. Depth: " + maxDepth);        
     }
 
