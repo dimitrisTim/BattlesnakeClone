@@ -44,7 +44,7 @@ public class SimulationObjects : ScriptableObject
             if (spawnedObject.CompareTag("Player"))
             {
                 simuSpawnedObj.GetComponent<Snake>().IsSimulation = true;
-                simuSpawnedObj.GetComponent<BoxCollider2D>().enabled = false; 
+                //simuSpawnedObj.GetComponent<BoxCollider2D>().enabled = false; 
             }
             simuSpawnedObj.layer = this.SimLayerID;
             allSimuObjects.Add(simuSpawnedObj);

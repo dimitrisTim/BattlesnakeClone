@@ -6,6 +6,7 @@ using CodeMonkey.Utils;
 using UnityEngine.UI;
 using System.Linq;
 using UnityEditor;
+using UnityEngine.Events;
 
 public class Snake : MonoBehaviour, System.ICloneable
 {
@@ -28,7 +29,7 @@ public class Snake : MonoBehaviour, System.ICloneable
     private List<SnakeMovePosition> snakeMovePositionList = new List<SnakeMovePosition>();
     public List<SnakeBodyPart> snakeBodyPartList = new List<SnakeBodyPart>();
     private float gridMoveTimer = 0f;
-    public float GridMoveTimerMax = 0.1f;
+    public float GridMoveTimerMax = 0.25f;
     public bool Alive;
     private bool snakeAte = false;
     private int prevLength;
@@ -49,7 +50,12 @@ public class Snake : MonoBehaviour, System.ICloneable
 
     public bool IsAiPlayer {get; set;}
 
-    private SimulationObjects simulationObjects;
+    public SimulationObjects simulationObjects;
+
+    public UnityEvent OnSnakeMoved;
+
+    public Direction NextAIAction;
+
 
     private void Awake()
     {
@@ -63,8 +69,6 @@ public class Snake : MonoBehaviour, System.ICloneable
     }
     public bool WrappedMode;
     public BoxCollider2D Collider;
-
-    private bool isSimuRunning = false;
 
     private void Start()
     {                        
@@ -262,24 +266,24 @@ public class Snake : MonoBehaviour, System.ICloneable
 
     public List<Direction> GetPossibleActions()
     {
-        isSimuRunning = true;
         var possibleActions = new List<Direction>();
-        Debug.Log("Current Grid Position: " + GridPosition);        
+        Debug.Log("Current Grid Position: " + GridPosition);
+
+        var currentGridPosition = new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z);     
+
         foreach(Direction direction in System.Enum.GetValues(typeof(Direction)))
         {
-            Undo.RecordObject(this, "PossibleActions");
-            PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+            StartRecording(this);
             
-            //maybe check if direction is possible because of head direction                       
-            gridMoveDirection = direction;
-            ExecuteMovement();
-            var occupied = Physics2D.OverlapBox(GridPosition, new Vector2(0.5f, 0.5f), 0);
+            //maybe check if direction is possible because of head direction                                   
+            ExecuteMovement(direction, false);
+            var occupied = Physics2D.OverlapBox(GridPosition, new Vector2(0.1f, 0.1f), 0);
             var collisionDetected = occupied != null && 
-                occupied.gameObject.CompareTag("Player") && 
-                occupied.gameObject.CompareTag("Body");
+                (occupied.gameObject.CompareTag("Player") || 
+                occupied.gameObject.CompareTag("Body"));
             // Debug.Log("Trying direction " + direction);
             // Debug.Log("New Grid Position: " + GridPosition);
-            // Debug.Log("Simulation Collision detected: " + collisionDetected);
+            //Debug.Log("Simulation Collision detected: " + collisionDetected);
             if (this.Alive && !collisionDetected)
             {
                 possibleActions.Add(direction);
@@ -291,7 +295,7 @@ public class Snake : MonoBehaviour, System.ICloneable
             Undo.PerformUndo();
             //Debug.Log("Undo Position: " + GridPosition);
         }
-        isSimuRunning = false;
+        this.transform.position = currentGridPosition;
         return possibleActions;
     }
 
@@ -300,27 +304,40 @@ public class Snake : MonoBehaviour, System.ICloneable
         gridMoveTimer += Time.deltaTime;
         if (gridMoveTimer >= GridMoveTimerMax)
         {                      
-            gridMoveTimer -= GridMoveTimerMax;
-
+            gridMoveTimer -= GridMoveTimerMax;   
+        
             if (this.IsAiPlayer && !this.IsSimulation)
-            {    
-                simulationObjects.SetSimuObjects();                
+            {
+                gridMoveDirection = NextAIAction;
+            }            
 
-                var snakes = simulationObjects.GetSnakes();
-                var you = snakes.Where(x=> x.ID == this.ID).FirstOrDefault();
-                // var enemy = snakes.Where(x => x.ID != this.ID).FirstOrDefault();
-                // var alphaBeta = new AlphaBeta(new List<Snake>(){ you, enemy});
-                var test = you.GetPossibleActions();
-                Debug.Log("Possible Actions: " + test.Count);
-            }
-
-            ExecuteMovement();
-            
+            ExecuteMovement(gridMoveDirection, false);            
         }
     }
 
-    private void ExecuteMovement()
+    public Event GetEvent()
+    {
+        return new Event();
+    }
+
+    private void StartRecording(Object obj)
+    {
+        Undo.RecordObject(obj, "PossibleActions");
+        PrefabUtility.RecordPrefabInstancePropertyModifications(obj);
+    }
+
+    public void ResetRecordedState()
+    {
+        Undo.PerformUndo();
+    }
+
+    public void ExecuteMovement(Direction direction, bool shouldReset = false)
     {        
+        if (shouldReset)
+        {
+            StartRecording(this);    
+        }
+        gridMoveDirection = direction;
         SnakeMovePosition previousSnakeMovePosition = null;
         if (snakeMovePositionList.Count > 0)
         {
@@ -345,6 +362,7 @@ public class Snake : MonoBehaviour, System.ICloneable
         UpdateSnakeBodyParts();
         transform.position = new Vector3(GridPosition.x, GridPosition.y);
         transform.eulerAngles = new Vector3(0, 0, GetAngleFromVectorFloat(GetGridMoveDirectionVector()) - 90);
+        OnSnakeMoved.Invoke();
     }
 
     private void CreateSnakeBodyPart()

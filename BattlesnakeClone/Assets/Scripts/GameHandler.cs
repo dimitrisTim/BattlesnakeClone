@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class GameHandler : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class GameHandler : MonoBehaviour
     private TextMeshProUGUI timerObj;
 
     private List<GameObject> snakes;
+
+    private AlphaBeta alphaBeta;
 
     private void Awake()
     {
@@ -38,10 +41,36 @@ public class GameHandler : MonoBehaviour
         newSnake2.GetComponent<Snake>().KeyStrategy = new ArrowsStrategy();
         newSnake2.GetComponent<Snake>().ID = 2;
         newSnake2.name = "Player_Snake";
+        newSnake2.GetComponent<Snake>().OnSnakeMoved.AddListener(RunSimulation);
         snakes.Add(newSnake2);
         
         timerObj = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
         SetPlayerNameColors();
+    }
+
+    private void RunSimulation()
+    {
+        var ai_snake = snakes.Select(x => x.GetComponent<Snake>()).Where(x => x.IsAiPlayer).FirstOrDefault();
+        ai_snake.simulationObjects.SetSimuObjects();        
+   
+        var simu_snakes = ai_snake.simulationObjects.GetSnakes();
+        var you = simu_snakes.Where(x=> x.ID == ai_snake.ID).FirstOrDefault();
+        var enemy = simu_snakes.Where(x => x.ID != ai_snake.ID).FirstOrDefault();
+
+        alphaBeta = ScriptableObject.CreateInstance<AlphaBeta>();
+        StartCoroutine(alphaBeta.StartTimer());
+        alphaBeta.PlayAlphaBeta(new List<Snake>(){you, enemy});
+        ai_snake.NextAIAction = alphaBeta.Bestaction;   
+
+        // if (you != null)
+        // {
+        //     // var alphaBeta = new AlphaBeta(new List<Snake>(){ you, enemy});
+        //     var test = you.GetPossibleActions();
+        //     var test2 = enemy.GetPossibleActions();
+        //     Debug.Log("Possible Actions ai_simu: " + test.Count);
+        //     Debug.Log("Possible Actions player_simu: " + test2.Count);
+        // }                                    
+
     }
 
     private void SetPlayerNameColors()
