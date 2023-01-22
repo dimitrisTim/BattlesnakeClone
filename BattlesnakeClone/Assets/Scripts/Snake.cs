@@ -41,9 +41,15 @@ public class Snake : MonoBehaviour
     public GameObject wallPrefab;
     public bool CheckAbility {get; set;}
 
-
+    public AudioSource audioSource1, audioSource2;
+    public AudioClip clip1 , clip2;
+    public enum AudioClipName {clip1, clip2};
     private void Start()
     {
+        audioSource1 = GetComponent<AudioSource>();
+        audioSource1.clip = clip1;
+        audioSource2 = GetComponent<AudioSource>();
+        audioSource2.clip = clip2;
         prevLength = 0;
         GridPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);
         SetValidRandomDirection();
@@ -235,10 +241,14 @@ public class Snake : MonoBehaviour
             scoreTXT.text = "Score: " + score;
             grow();
             // createSnakeBody();
+            audioSource1.clip = clip1;
+            audioSource1.Play();
             Destroy(collision.gameObject);
         }
         if (collision.CompareTag("Speed"))
         {
+            audioSource2.clip = clip2;
+            audioSource2.Play();
             Destroy(collision.gameObject);
             this.gameObject.AddComponent<SpeedAbility>();
         }
